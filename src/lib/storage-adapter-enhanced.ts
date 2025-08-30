@@ -1,26 +1,5 @@
-// Universal storage adapter - Edge Runtime compatible
-// No Node.js modules, pure memory-based storage for Edge Runtime
+// Enhanced storage adapter with JSON file persistence for development
 import { getEnvironmentInfo, logStorageInfo } from './environment';
-
-// Runtime detection
-const isServerEnvironment = typeof window === 'undefined';
-const isEdgeRuntime = (() => {
-  try {
-    return (
-      isServerEnvironment &&
-      typeof globalThis !== 'undefined' &&
-      (
-        // Check for Edge Runtime indicators
-        'EdgeRuntime' in globalThis ||
-        (globalThis as { process?: { env?: { NEXT_RUNTIME?: string } } }).process?.env?.NEXT_RUNTIME === 'edge' ||
-        // Check if we're in a serverless environment without file system access
-        ('process' in globalThis && !(globalThis as { process?: { versions?: { node?: string } } }).process?.versions?.node)
-      )
-    );
-  } catch {
-    return false;
-  }
-})();
 
 export interface StorageAdapter {
   read<T>(key: string, defaultValue: T): Promise<T>;
@@ -50,7 +29,6 @@ class InMemoryStorage implements StorageAdapter {
   }
 }
 
-// JSON File Storage with memory fallback
 class JSONFileStorage implements StorageAdapter {
   private memoryCache = new Map<string, unknown>();
 
@@ -74,9 +52,9 @@ class JSONFileStorage implements StorageAdapter {
 
     try {
       // Try to read from file system (only works in Node.js)
-      if (typeof window === 'undefined' && !isEdgeRuntime) {
-        const fs = await import('fs/promises');
-        const path = await import('path');
+      if (typeof window === 'undefined' && typeof require !== 'undefined') {
+        const fs = require('fs').promises;
+        const path = require('path');
         const filePath = path.join(process.cwd(), this.getFilePath(key));
         
         const data = await fs.readFile(filePath, 'utf-8');
@@ -84,7 +62,6 @@ class JSONFileStorage implements StorageAdapter {
         
         // Cache in memory
         this.memoryCache.set(key, parsed);
-        console.log(`📁 Data loaded from JSON: ${this.getFilePath(key)}`);
         return parsed;
       }
     } catch (error) {
@@ -102,9 +79,9 @@ class JSONFileStorage implements StorageAdapter {
 
     try {
       // Try to write to file system (only works in Node.js)
-      if (typeof window === 'undefined' && !isEdgeRuntime) {
-        const fs = await import('fs/promises');
-        const path = await import('path');
+      if (typeof window === 'undefined' && typeof require !== 'undefined') {
+        const fs = require('fs').promises;
+        const path = require('path');
         const filePath = path.join(process.cwd(), this.getFilePath(key));
         
         // Ensure directory exists
@@ -113,13 +90,13 @@ class JSONFileStorage implements StorageAdapter {
         
         // Write JSON file with pretty formatting
         await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
-        console.log(`💾 Data saved to JSON file: ${this.getFilePath(key)}`);
+        console.log(`✅ Data saved to JSON file: ${this.getFilePath(key)}`);
       } else {
-        console.log(`💾 Data saved to memory: ${key} (file system not available)`);
+        console.log(`✅ Data saved to memory: ${key} (file system not available)`);
       }
     } catch (error) {
       console.warn(`⚠️ Could not save to JSON file for ${key}:`, error);
-      console.log(`💾 Data saved to memory only: ${key}`);
+      console.log(`✅ Data saved to memory only: ${key}`);
     }
   }
 
@@ -137,14 +114,18 @@ export async function createStorageAdapter(): Promise<StorageAdapter> {
     logStorageInfo();
   }
   
-  // Use JSON file storage in development and production (with fallback to memory)
-  if (!isEdgeRuntime) {
-    console.log('🔧 Using JSON file storage with memory cache');
-    return new JSONFileStorage();
+  // Use JSON file storage in development for persistence
+  if (!env.isProduction && typeof window === 'undefined') {
+    try {
+      console.log('🔧 Using JSON file storage for development (with memory cache)');
+      return new JSONFileStorage();
+    } catch (error) {
+      console.warn('File system not available, falling back to memory storage');
+    }
   }
   
-  // Use memory storage for Edge Runtime only
-  console.log('🔧 Using memory storage (Edge Runtime)');
+  // Use memory storage for production/serverless
+  console.log('🔧 Using memory storage (universally compatible)');
   return new InMemoryStorage();
 }
 
