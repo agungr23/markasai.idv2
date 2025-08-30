@@ -6,7 +6,7 @@ let products: Product[] = [];
 let blogPosts: BlogPost[] = [];
 let caseStudies: CaseStudy[] = [];
 let testimonials: Testimonial[] = [];
-let settings: any = {};
+let settings: Record<string, any> = {};
 
 // Load data function for client-side or edge runtime
 function loadData() {
@@ -20,9 +20,11 @@ function loadData() {
       loadSettings: () => fetch('/api/default-data/settings').then(r => r.json())
     };
   } else {
-    // Server-side: Use require (safe for build time)
+    // Server-side: Use dynamic imports for Edge Runtime compatibility
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const fs = require('fs');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const path = require('path');
       
       return {
@@ -47,7 +49,7 @@ function loadData() {
           return JSON.parse(data);
         }
       };
-    } catch (error) {
+    } catch {
       // Fallback for edge runtime
       return {
         loadProducts: () => [],
@@ -84,8 +86,8 @@ async function initializeData() {
       settings = loader.loadSettings();
     }
     dataLoaded = true;
-  } catch (error) {
-    console.warn('Failed to load JSON data, using empty defaults:', error);
+  } catch (err) {
+    console.warn('Failed to load JSON data, using empty defaults:', err);
     dataLoaded = true; // Mark as loaded to prevent retry loops
   }
 }
