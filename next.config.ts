@@ -7,6 +7,17 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   
+  // Build configuration untuk menghindari timeout
+  generateBuildId: async () => {
+    return 'markasai-build-' + Date.now();
+  },
+  
+  // Static generation configuration
+  typescript: {
+    // Ignore build errors untuk development/build speed
+    ignoreBuildErrors: false,
+  },
+  
   // Ensure proper image optimization
   images: {
     domains: [],

@@ -232,7 +232,22 @@ export async function writeCaseStudiesToFile(caseStudies: CaseStudy[]): Promise<
 
 // Server-side functions for case study management
 export async function getCaseStudiesFromStorage(): Promise<CaseStudy[]> {
-  return await readCaseStudiesFromFile();
+  try {
+    const caseStudies = await readCaseStudiesFromFile();
+    
+    // Pastikan semua case studies memiliki data yang valid
+    return caseStudies.filter(cs => 
+      cs && 
+      cs.id && 
+      cs.slug && 
+      cs.title &&
+      cs.slug.trim() !== '' &&
+      cs.title.trim() !== ''
+    );
+  } catch (error) {
+    console.error('Error getting case studies from storage:', error);
+    return defaultCaseStudies.slice(0, 3); // Return default limited data jika error
+  }
 }
 
 export async function addCaseStudyToStorage(caseStudy: CaseStudy): Promise<void> {

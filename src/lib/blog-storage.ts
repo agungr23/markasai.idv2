@@ -188,7 +188,22 @@ export async function writeBlogPostsToFile(posts: BlogPost[]): Promise<void> {
 
 // Server-side functions for blog post management
 export async function getBlogPostsFromStorage(): Promise<BlogPost[]> {
-  return await readBlogPostsFromFile();
+  try {
+    const posts = await readBlogPostsFromFile();
+    
+    // Pastikan semua blog posts memiliki data yang valid
+    return posts.filter(post => 
+      post && 
+      post.id && 
+      post.slug && 
+      post.title &&
+      post.slug.trim() !== '' &&
+      post.title.trim() !== ''
+    );
+  } catch (error) {
+    console.error('Error getting blog posts from storage:', error);
+    return defaultBlogPosts.slice(0, 3); // Return default limited data jika error
+  }
 }
 
 export async function addBlogPostToStorage(post: BlogPost): Promise<void> {

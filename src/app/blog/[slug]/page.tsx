@@ -13,12 +13,20 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  const blogPosts = await getBlogPostsFromStorage();
-  // Only generate static params for published posts
-  const publishedPosts = blogPosts.filter(post => post.status === 'published');
-  return publishedPosts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const blogPosts = await getBlogPostsFromStorage();
+    // Only generate static params for published posts dan batasi jumlah
+    const publishedPosts = blogPosts
+      .filter(post => post.status === 'published' && post.slug && post.slug.trim() !== '')
+      .slice(0, 10); // Batasi maksimal 10 untuk menghindari timeout
+    
+    return publishedPosts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch (error) {
+    console.error('Error generating static params for blog posts:', error);
+    return []; // Return empty array jika ada error
+  }
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {

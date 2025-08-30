@@ -13,10 +13,19 @@ interface CaseStudyPageProps {
 }
 
 export async function generateStaticParams() {
-  const caseStudies = await getCaseStudiesFromStorage();
-  return caseStudies.map((caseStudy) => ({
-    slug: caseStudy.slug,
-  }));
+  try {
+    const caseStudies = await getCaseStudiesFromStorage();
+    // Limit ke case studies yang benar-benar ada dan valid
+    return caseStudies
+      .filter(caseStudy => caseStudy.slug && caseStudy.slug.trim() !== '')
+      .slice(0, 10) // Batasi maksimal 10 untuk menghindari timeout
+      .map((caseStudy) => ({
+        slug: caseStudy.slug,
+      }));
+  } catch (error) {
+    console.error('Error generating static params for case studies:', error);
+    return []; // Return empty array jika ada error
+  }
 }
 
 export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
