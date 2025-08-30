@@ -6,7 +6,7 @@ let products: Product[] = [];
 let blogPosts: BlogPost[] = [];
 let caseStudies: CaseStudy[] = [];
 let testimonials: Testimonial[] = [];
-let settings: Record<string, any> = {};
+let settings: Record<string, unknown> = {};
 
 // Load data function for client-side or edge runtime
 function loadData() {
@@ -22,9 +22,10 @@ function loadData() {
   } else {
     // Server-side: Use dynamic imports for Edge Runtime compatibility
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // Using Node.js modules only in server environment
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const fs = require('fs');
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const path = require('path');
       
       return {
