@@ -121,10 +121,10 @@ Toko Elektronik Modern adalah UMKM yang bergerak di bidang retail elektronik...`
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { type: string } }
+  { params }: { params: Promise<{ type: string }> }
 ) {
   try {
-    const type = params.type;
+    const { type } = await params;
     
     if (type === 'products') {
       return NextResponse.json(products);
