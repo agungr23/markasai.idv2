@@ -122,4 +122,18 @@ export interface ValuePillar {
   icon: string;
 }
 
+// Media Types
+export interface MediaFile {
+  id: string;
+  name: string;
+  originalName: string;
+  url: string;
+  type: 'image' | 'video' | 'file';
+  size: string;
+  uploadedAt: string;
+  dimensions: string;
+  deletable: boolean;
+  isStatic: boolean;
+}
+
 

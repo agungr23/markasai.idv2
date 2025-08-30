@@ -26,14 +26,15 @@ const nextConfig: NextConfig = {
     pagesBufferLength: 2,
   },
   
-  // Ensure proper image optimization
+  // Ensure proper image optimization for Domainesia
   images: {
     domains: [],
-    unoptimized: false,
+    unoptimized: true, // Required for static export to Domainesia
   },
   
-  // Output configuration for better compatibility
-  output: undefined, // Let Next.js decide based on deployment target
+  // Output configuration for Domainesia deployment
+  output: 'export', // Enable static export for Domainesia
+  trailingSlash: true, // Required for static hosting
   
   // Enable compression
   compress: true,

@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "build:domainesia": "next build --turbopack",
+    "export:domainesia": "next export",
+    "deploy:domainesia": "pnpm build:domainesia && pnpm export:domainesia",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",

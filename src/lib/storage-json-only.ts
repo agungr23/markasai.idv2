@@ -1,11 +1,12 @@
 // Pure JSON storage - Using your existing JSON data files
-import { Product, BlogPost, CaseStudy, Testimonial } from '@/types';
+import { Product, BlogPost, CaseStudy, Testimonial, MediaFile } from '@/types';
 
 // Import your actual JSON data
 let products: Product[] = [];
 let blogPosts: BlogPost[] = [];
 let caseStudies: CaseStudy[] = [];
 let testimonials: Testimonial[] = [];
+let mediaFiles: MediaFile[] = [];
 let settings: Record<string, unknown> = {};
 
 // Load data function for client-side or edge runtime
@@ -17,6 +18,7 @@ function loadData() {
       loadBlogPosts: () => fetch('/api/default-data/blog-posts').then(r => r.json()),
       loadCaseStudies: () => fetch('/api/default-data/case-studies').then(r => r.json()),
       loadTestimonials: () => fetch('/api/default-data/testimonials').then(r => r.json()),
+      loadMediaFiles: () => fetch('/api/default-data/media').then(r => r.json()),
       loadSettings: () => fetch('/api/default-data/settings').then(r => r.json())
     };
   } else {
@@ -45,6 +47,10 @@ function loadData() {
           const data = fs.readFileSync(path.join(process.cwd(), 'data/testimonials.json'), 'utf8');
           return JSON.parse(data);
         },
+        loadMediaFiles: () => {
+          const data = fs.readFileSync(path.join(process.cwd(), 'data/media.json'), 'utf8');
+          return JSON.parse(data);
+        },
         loadSettings: () => {
           const data = fs.readFileSync(path.join(process.cwd(), 'data/settings.json'), 'utf8');
           return JSON.parse(data);
@@ -57,6 +63,7 @@ function loadData() {
         loadBlogPosts: () => [],
         loadCaseStudies: () => [],
         loadTestimonials: () => [],
+        loadMediaFiles: () => [],
         loadSettings: () => ({})
       };
     }
@@ -77,6 +84,7 @@ async function initializeData() {
       blogPosts = await loader.loadBlogPosts();
       caseStudies = await loader.loadCaseStudies();
       testimonials = await loader.loadTestimonials();
+      mediaFiles = await loader.loadMediaFiles();
       settings = await loader.loadSettings();
     } else {
       // Server-side sync loading
@@ -84,6 +92,7 @@ async function initializeData() {
       blogPosts = loader.loadBlogPosts();
       caseStudies = loader.loadCaseStudies();
       testimonials = loader.loadTestimonials();
+      mediaFiles = loader.loadMediaFiles();
       settings = loader.loadSettings();
     }
     dataLoaded = true;
@@ -305,4 +314,58 @@ export async function deleteTestimonial(id: string): Promise<boolean> {
   
   testimonials.splice(index, 1);
   return true;
+}
+
+// Media functions
+export async function getMediaFiles(): Promise<MediaFile[]> {
+  await initializeData();
+  return mediaFiles || [];
+}
+
+export async function getMediaFileById(id: string): Promise<MediaFile | undefined> {
+  await initializeData();
+  return (mediaFiles || []).find(file => file.id === id);
+}
+
+export async function addMediaFile(file: MediaFile): Promise<MediaFile> {
+  await initializeData();
+  mediaFiles = [...(mediaFiles || []), file];
+  return file;
+}
+
+export async function updateMediaFile(id: string, updateData: Partial<MediaFile>): Promise<MediaFile | null> {
+  await initializeData();
+  const index = (mediaFiles || []).findIndex(file => file.id === id);
+  if (index === -1) return null;
+  
+  const updatedFile = { ...mediaFiles[index], ...updateData };
+  mediaFiles[index] = updatedFile;
+  return updatedFile;
+}
+
+export async function deleteMediaFile(id: string): Promise<boolean> {
+  await initializeData();
+  const index = (mediaFiles || []).findIndex(file => file.id === id);
+  if (index === -1) return false;
+  
+  mediaFiles.splice(index, 1);
+  return true;
+}
+
+export async function deleteMultipleMediaFiles(ids: string[]): Promise<{ deletedFiles: string[]; errors: string[] }> {
+  await initializeData();
+  const deletedFiles: string[] = [];
+  const errors: string[] = [];
+  
+  for (const id of ids) {
+    const index = (mediaFiles || []).findIndex(file => file.id === id);
+    if (index !== -1) {
+      mediaFiles.splice(index, 1);
+      deletedFiles.push(id);
+    } else {
+      errors.push(`File not found: ${id}`);
+    }
+  }
+  
+  return { deletedFiles, errors };
 }

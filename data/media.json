@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1735564800000",
+    "name": "1735564800000_hero-image.jpg",
+    "originalName": "hero-image.jpg",
+    "url": "/media/1735564800000_hero-image.jpg",
+    "type": "image",
+    "size": "1.2 MB",
+    "uploadedAt": "2024-12-30",
+    "dimensions": "1920x1080",
+    "deletable": true,
+    "isStatic": false
+  },
+  {
+    "id": "1735564700000",
+    "name": "1735564700000_logo-markasai.png",
+    "originalName": "logo-markasai.png",
+    "url": "/media/1735564700000_logo-markasai.png",
+    "type": "image",
+    "size": "256 KB",
+    "uploadedAt": "2024-12-30",
+    "dimensions": "400x400",
+    "deletable": true,
+    "isStatic": false
+  }
+]
