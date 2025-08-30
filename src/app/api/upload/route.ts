@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { handleFileUpload } from '@/lib/media-storage';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if we're in development mode
-    if (process.env.NODE_ENV !== 'development') {
-      return NextResponse.json({
-        error: 'File upload only available in development mode. In production, use cloud storage.',
-        suggestion: 'Consider using Cloudinary, AWS S3, or similar service for production file uploads.'
-      }, { status: 400 });
-    }
-
     const formData = await request.formData();
-    const uploadedFile = await handleFileUpload(formData);
+    const file = formData.get('file') as File;
 
-    if (!uploadedFile) {
+    if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
+    // Temporary implementation - will be replaced with Vercel Blob after deployment
     return NextResponse.json({
-      success: true,
-      message: 'File uploaded successfully',
-      file: uploadedFile
-    });
+      success: false,
+      message: 'File upload will be available after Vercel Blob setup',
+      suggestion: 'Setup Vercel Blob storage in dashboard'
+    }, { status: 501 });
 
   } catch (error) {
     console.error('Upload error:', error);

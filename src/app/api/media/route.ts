@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getMediaFiles, addMediaFile } from '@/lib/media-storage';
+import { getMediaFiles, addMediaFile } from '@/lib/storage-json-only';
 import { MediaFile } from '@/types';
 
 export async function GET() {
