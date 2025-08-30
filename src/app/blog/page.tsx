@@ -16,10 +16,14 @@ export default function BlogPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load data dari JSON langsung - sangat cepat, no API call needed
-    const posts = getBlogPosts();
-    setBlogPosts(posts);
-    setLoading(false);
+    // Load data dari JSON dengan async functions
+    getBlogPosts().then(posts => {
+      setBlogPosts(posts);
+      setLoading(false);
+    }).catch(error => {
+      console.error('Error loading blog posts:', error);
+      setLoading(false);
+    });
   }, []);
 
   const categories = [

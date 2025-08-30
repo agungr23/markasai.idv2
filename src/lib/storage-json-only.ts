@@ -1,106 +1,187 @@
-// Pure JSON storage - No complex adapters, Edge Runtime compatible
+// Pure JSON storage - Using your existing JSON data files
 import { Product, BlogPost, CaseStudy, Testimonial } from '@/types';
 
-// Import JSON data directly - build time resolution
-import productsData from '../../data/products.json';
-import blogPostsData from '../../data/blog-posts.json';
-import caseStudiesData from '../../data/case-studies.json';
-import testimonialsData from '../../data/testimonials.json';
+// Import your actual JSON data
+let products: Product[] = [];
+let blogPosts: BlogPost[] = [];
+let caseStudies: CaseStudy[] = [];
+let testimonials: Testimonial[] = [];
+let settings: any = {};
 
-// Type assertion untuk memastikan type safety
-const products = productsData as Product[];
-const blogPosts = blogPostsData as BlogPost[];
-const caseStudies = caseStudiesData as CaseStudy[];
-const testimonials = testimonialsData as Testimonial[];
-
-// Simple, fast, no async needed
-export function getProducts(): Product[] {
-  return products;
+// Load data function for client-side or edge runtime
+function loadData() {
+  if (typeof window !== 'undefined') {
+    // Client-side: Use fetch API
+    return {
+      loadProducts: () => fetch('/data/products.json').then(r => r.json()),
+      loadBlogPosts: () => fetch('/api/default-data/blog-posts').then(r => r.json()),
+      loadCaseStudies: () => fetch('/api/default-data/case-studies').then(r => r.json()),
+      loadTestimonials: () => fetch('/api/default-data/testimonials').then(r => r.json()),
+      loadSettings: () => fetch('/api/default-data/settings').then(r => r.json())
+    };
+  } else {
+    // Server-side: Use require (safe for build time)
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      return {
+        loadProducts: () => {
+          const data = fs.readFileSync(path.join(process.cwd(), 'public/data/products.json'), 'utf8');
+          return JSON.parse(data);
+        },
+        loadBlogPosts: () => {
+          const data = fs.readFileSync(path.join(process.cwd(), 'data/blog-posts.json'), 'utf8');
+          return JSON.parse(data);
+        },
+        loadCaseStudies: () => {
+          const data = fs.readFileSync(path.join(process.cwd(), 'data/case-studies.json'), 'utf8');
+          return JSON.parse(data);
+        },
+        loadTestimonials: () => {
+          const data = fs.readFileSync(path.join(process.cwd(), 'data/testimonials.json'), 'utf8');
+          return JSON.parse(data);
+        },
+        loadSettings: () => {
+          const data = fs.readFileSync(path.join(process.cwd(), 'data/settings.json'), 'utf8');
+          return JSON.parse(data);
+        }
+      };
+    } catch (error) {
+      // Fallback for edge runtime
+      return {
+        loadProducts: () => [],
+        loadBlogPosts: () => [],
+        loadCaseStudies: () => [],
+        loadTestimonials: () => [],
+        loadSettings: () => ({})
+      };
+    }
+  }
 }
 
-export function getBlogPosts(): BlogPost[] {
-  return blogPosts.filter(post => post.status === 'published');
+// Initialize data
+let dataLoaded = false;
+async function initializeData() {
+  if (dataLoaded) return;
+  
+  const loader = loadData();
+  
+  try {
+    if (typeof window !== 'undefined') {
+      // Client-side async loading
+      products = await loader.loadProducts();
+      blogPosts = await loader.loadBlogPosts();
+      caseStudies = await loader.loadCaseStudies();
+      testimonials = await loader.loadTestimonials();
+      settings = await loader.loadSettings();
+    } else {
+      // Server-side sync loading
+      products = loader.loadProducts();
+      blogPosts = loader.loadBlogPosts();
+      caseStudies = loader.loadCaseStudies();
+      testimonials = loader.loadTestimonials();
+      settings = loader.loadSettings();
+    }
+    dataLoaded = true;
+  } catch (error) {
+    console.warn('Failed to load JSON data, using empty defaults:', error);
+    dataLoaded = true; // Mark as loaded to prevent retry loops
+  }
 }
 
-export function getCaseStudies(): CaseStudy[] {
-  return caseStudies.filter(cs => cs.status === 'published');
+// Async functions to ensure data is loaded
+export async function getProducts(): Promise<Product[]> {
+  await initializeData();
+  return products || [];
 }
 
-export function getTestimonials(): Testimonial[] {
-  return testimonials;
+export async function getBlogPosts(): Promise<BlogPost[]> {
+  await initializeData();
+  return (blogPosts || []).filter(post => post.status === 'published');
 }
 
-// Individual getters
-export function getProductBySlug(slug: string): Product | undefined {
-  return products.find(product => product.slug === slug);
+export async function getCaseStudies(): Promise<CaseStudy[]> {
+  await initializeData();
+  return (caseStudies || []).filter(cs => cs.status === 'published');
 }
 
-export function getBlogPostBySlug(slug: string): BlogPost | undefined {
-  return blogPosts.find(post => post.slug === slug && post.status === 'published');
+export async function getTestimonials(): Promise<Testimonial[]> {
+  await initializeData();
+  return testimonials || [];
 }
 
-export function getCaseStudyBySlug(slug: string): CaseStudy | undefined {
-  return caseStudies.find(cs => cs.slug === slug && cs.status === 'published');
+// Individual getters with async data loading
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+  await initializeData();
+  return (products || []).find(product => product.slug === slug);
 }
 
-// Categories and filtering
-export function getProductCategories(): string[] {
-  const categories = [...new Set(products.map(product => product.category))];
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+  await initializeData();
+  return (blogPosts || []).find(post => post.slug === slug && post.status === 'published');
+}
+
+export async function getCaseStudyBySlug(slug: string): Promise<CaseStudy | undefined> {
+  await initializeData();
+  return (caseStudies || []).find(cs => cs.slug === slug && cs.status === 'published');
+}
+
+// Categories and filtering with async data loading
+export async function getProductCategories(): Promise<string[]> {
+  await initializeData();
+  const categories = [...new Set((products || []).map(product => product.category))];
   return categories.sort();
 }
 
-export function getProductsByCategory(category: string): Product[] {
-  return products.filter(product => product.category === category);
+export async function getProductsByCategory(category: string): Promise<Product[]> {
+  await initializeData();
+  return (products || []).filter(product => product.category === category);
 }
 
-export function getBlogPostsByTag(tag: string): BlogPost[] {
-  return blogPosts.filter(post => 
+export async function getBlogPostsByTag(tag: string): Promise<BlogPost[]> {
+  await initializeData();
+  return (blogPosts || []).filter(post => 
     post.status === 'published' && 
-    post.tags.includes(tag)
+    post.tags && post.tags.includes(tag)
   );
 }
 
-// Featured content
-export function getFeaturedProducts(): Product[] {
-  return products.filter(product => product.featured).slice(0, 3);
+// Featured content with async data loading
+export async function getFeaturedProducts(): Promise<Product[]> {
+  await initializeData();
+  return (products || []).filter(product => product.isFeatured || product.featured).slice(0, 3);
 }
 
-export function getFeaturedBlogPosts(): BlogPost[] {
-  return blogPosts
+export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
+  await initializeData();
+  return (blogPosts || [])
     .filter(post => post.status === 'published')
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, 3);
 }
 
-export function getFeaturedCaseStudies(): CaseStudy[] {
-  return caseStudies
+export async function getFeaturedCaseStudies(): Promise<CaseStudy[]> {
+  await initializeData();
+  return (caseStudies || [])
     .filter(cs => cs.status === 'published')
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, 3);
 }
 
-export function getFeaturedTestimonials(): Testimonial[] {
-  return testimonials.filter(testimonial => testimonial.featured).slice(0, 6);
+export async function getFeaturedTestimonials(): Promise<Testimonial[]> {
+  await initializeData();
+  return (testimonials || []).filter(testimonial => testimonial.featured).slice(0, 6);
 }
 
-// Default settings
-export function getSettings() {
-  return {
-    siteTitle: 'MarkasAI.ID - Platform AI Terdepan Indonesia',
-    siteDescription: 'Solusi AI terdepan untuk transformasi digital bisnis Anda',
+// Settings from your JSON file
+export async function getSettings() {
+  await initializeData();
+  return settings || {
+    siteName: 'MarkasAI',
+    siteDescription: 'AI untuk Bisnis yang Lebih Efektif & Efisien',
     contactEmail: 'hello@markasai.id',
     phone: '+62 812-3456-7890',
-    address: 'Jakarta, Indonesia',
-    socialMedia: {
-      instagram: '@markasai.id',
-      linkedin: 'MarkasAI',
-      youtube: '@MarkasAI',
-      twitter: '@markasai_id'
-    },
-    businessHours: {
-      weekdays: '09:00 - 18:00 WIB',
-      saturday: '09:00 - 15:00 WIB',
-      sunday: 'Tutup'
-    }
+    address: 'Jakarta, Indonesia'
   };
 }

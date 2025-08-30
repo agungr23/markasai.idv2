@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { Calendar, Building, ArrowLeft, TrendingUp, Users, Clock } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { CaseStudy } from '@/types';
+import { getCaseStudyBySlug } from '@/lib/storage-json-only';
 
 // Hapus generateStaticParams dan generateMetadata untuk menghindari build timeout
 // export async function generateStaticParams() { ... }
@@ -23,26 +23,17 @@ export default function CaseStudyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadCaseStudy() {
-      try {
-        setLoading(true);
-        // Load case study dari API atau storage
-        const response = await fetch(`/api/default-data/case-studies`);
-        if (response.ok) {
-          const caseStudies = await response.json();
-          const foundCaseStudy = caseStudies.find((cs: CaseStudy) => cs.slug === slug);
-          setCaseStudy(foundCaseStudy || null);
-        }
-      } catch (error) {
+    if (slug) {
+      setLoading(true);
+      // Load case study dari storage-json-only menggunakan data Anda
+      getCaseStudyBySlug(slug).then(foundCaseStudy => {
+        setCaseStudy(foundCaseStudy || null);
+        setLoading(false);
+      }).catch(error => {
         console.error('Error loading case study:', error);
         setCaseStudy(null);
-      } finally {
         setLoading(false);
-      }
-    }
-
-    if (slug) {
-      loadCaseStudy();
+      });
     }
   }, [slug]);
 

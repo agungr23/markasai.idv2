@@ -26,20 +26,26 @@ export default function BlogPostPage() {
     if (slug) {
       setLoading(true);
       
-      // Load data dari JSON langsung - sangat cepat
-      const foundPost = getBlogPostBySlug(slug);
-      setPost(foundPost || null);
-      
-      if (foundPost) {
-        // Get related posts
-        const allPosts = getBlogPosts();
-        const related = allPosts
-          .filter((p) => p.id !== foundPost.id && p.tags.some(tag => foundPost.tags.includes(tag)))
-          .slice(0, 3);
-        setRelatedPosts(related);
-      }
-      
-      setLoading(false);
+      // Load data dari JSON dengan async functions
+      Promise.all([
+        getBlogPostBySlug(slug),
+        getBlogPosts()
+      ]).then(([foundPost, allPosts]) => {
+        setPost(foundPost || null);
+        
+        if (foundPost) {
+          // Get related posts
+          const related = allPosts
+            .filter((p) => p.id !== foundPost.id && p.tags && p.tags.some(tag => foundPost.tags && foundPost.tags.includes(tag)))
+            .slice(0, 3);
+          setRelatedPosts(related);
+        }
+        
+        setLoading(false);
+      }).catch(error => {
+        console.error('Error loading blog post:', error);
+        setLoading(false);
+      });
     }
   }, [slug]);
 
