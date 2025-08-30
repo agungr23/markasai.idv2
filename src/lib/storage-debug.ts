@@ -13,7 +13,7 @@ export interface StorageHealthStatus {
 }
 
 export async function checkStorageHealth(): Promise<StorageHealthStatus> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   const env = getEnvironmentInfo();
   
   try {

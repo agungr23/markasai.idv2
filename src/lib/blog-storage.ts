@@ -172,13 +172,13 @@ Mulai dari langkah kecil, fokus pada kebutuhan customer, dan jangan takut untuk 
 
 // Get blog posts using universal storage adapter
 export async function readBlogPostsFromFile(): Promise<BlogPost[]> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return await storage.read('blog-posts', defaultBlogPosts);
 }
 
 // Save blog posts using universal storage adapter
 export async function writeBlogPostsToFile(posts: BlogPost[]): Promise<void> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   // Sort by publishedAt (newest first)
   const sortedPosts = posts.sort((a, b) => 
     new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()

@@ -67,7 +67,7 @@ const defaultSettings: SiteSettings = {
 
 // Load settings using universal storage adapter
 export async function getSettingsFromStorage(): Promise<SiteSettings> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return await storage.read('settings', defaultSettings);
 }
 
@@ -80,7 +80,7 @@ export async function saveSettingsToStorage(settings: SiteSettings): Promise<voi
       updatedAt: new Date().toISOString()
     };
     
-    const storage = getStorageAdapter();
+    const storage = await getStorageAdapter();
     await storage.write('settings', updatedSettings);
     console.log('✅ Settings saved successfully');
   } catch (error) {

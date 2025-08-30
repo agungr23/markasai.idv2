@@ -3,7 +3,7 @@ import { products as defaultProducts } from '@/data/products';
 import { getStorageAdapter } from './storage-adapter';
 
 export async function getProductsFromStorage(): Promise<Product[]> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return await storage.read('products', defaultProducts);
 }
 
@@ -18,7 +18,7 @@ export async function getProductBySlugFromStorage(slug: string): Promise<Product
 }
 
 export async function saveProductToStorage(product: Product): Promise<Product> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   const products = await getProductsFromStorage();
   
   const existingIndex = products.findIndex(p => p.id === product.id);
@@ -36,7 +36,7 @@ export async function saveProductToStorage(product: Product): Promise<Product> {
 }
 
 export async function deleteProductFromStorage(id: string): Promise<boolean> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   const products = await getProductsFromStorage();
   const initialLength = products.length;
   

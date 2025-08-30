@@ -2,7 +2,7 @@ import { Testimonial } from '@/types';
 import { getStorageAdapter } from './storage-adapter';
 
 export async function getTestimonialsFromStorage(): Promise<Testimonial[]> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return await storage.read('testimonials', []);
 }
 
@@ -12,7 +12,7 @@ export async function getTestimonialByIdFromStorage(id: string): Promise<Testimo
 }
 
 export async function saveTestimonialToStorage(testimonial: Testimonial): Promise<void> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   const testimonials = await getTestimonialsFromStorage();
   
   // Check if testimonial already exists
@@ -33,7 +33,7 @@ export async function saveTestimonialToStorage(testimonial: Testimonial): Promis
 }
 
 export async function deleteTestimonialFromStorage(id: string): Promise<void> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   const testimonials = await getTestimonialsFromStorage();
   const filteredTestimonials = testimonials.filter(testimonial => testimonial.id !== id);
   

@@ -216,13 +216,13 @@ Inventory management menjadi lebih akurat dan efisien dengan penghematan biaya 2
 
 // Get case studies using universal storage adapter
 export async function readCaseStudiesFromFile(): Promise<CaseStudy[]> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return await storage.read('case-studies', defaultCaseStudies);
 }
 
 // Save case studies using universal storage adapter
 export async function writeCaseStudiesToFile(caseStudies: CaseStudy[]): Promise<void> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   // Sort by publishedAt (newest first)
   const sortedStudies = caseStudies.sort((a, b) => 
     new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
