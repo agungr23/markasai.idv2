@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "type-check": "tsc --noEmit",
+    "debug:storage": "node -e \"import('./src/lib/storage-debug.js').then(m => m.debugStorageInfo())\"",
+    "test:storage": "node -e \"import('./src/lib/storage-debug.js').then(m => m.testAllStorageModules())\"",
+    "build:debug": "npm run build && npm run start:debug",
+    "start:debug": "NODE_ENV=production DEBUG=1 next start"
+  }
+}

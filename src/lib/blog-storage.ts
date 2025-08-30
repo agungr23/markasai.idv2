@@ -1,9 +1,5 @@
 import { BlogPost } from '@/types';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-
-// Path to the JSON file where blog posts are stored
-const BLOG_DATA_FILE = join(process.cwd(), 'data', 'blog-posts.json');
+import { getStorageAdapter } from './storage-adapter';
 
 // Default blog posts data
 const defaultBlogPosts: BlogPost[] = [
@@ -174,39 +170,20 @@ Mulai dari langkah kecil, fokus pada kebutuhan customer, dan jangan takut untuk 
   }
 ];
 
-// Helper function to ensure data directory exists
-async function ensureDataDirectory(): Promise<void> {
-  const dataDir = join(process.cwd(), 'data');
-  try {
-    await fs.access(dataDir);
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true });
-  }
-}
-
-// Helper function to read blog posts from file
+// Get blog posts using universal storage adapter
 export async function readBlogPostsFromFile(): Promise<BlogPost[]> {
-  try {
-    await ensureDataDirectory();
-    const data = await fs.readFile(BLOG_DATA_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    // If file doesn't exist or is corrupted, return default data and create file
-    console.log('Blog data file not found, creating with default data');
-    await writeBlogPostsToFile(defaultBlogPosts);
-    return defaultBlogPosts;
-  }
+  const storage = getStorageAdapter();
+  return await storage.read('blog-posts', defaultBlogPosts);
 }
 
-// Helper function to write blog posts to file
+// Save blog posts using universal storage adapter
 export async function writeBlogPostsToFile(posts: BlogPost[]): Promise<void> {
-  try {
-    await ensureDataDirectory();
-    await fs.writeFile(BLOG_DATA_FILE, JSON.stringify(posts, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error writing blog posts to file:', error);
-    throw error;
-  }
+  const storage = getStorageAdapter();
+  // Sort by publishedAt (newest first)
+  const sortedPosts = posts.sort((a, b) => 
+    new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+  await storage.write('blog-posts', sortedPosts);
 }
 
 // Server-side functions for blog post management

@@ -1,9 +1,5 @@
 import { CaseStudy } from '@/types';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-
-// Path to the JSON file where case studies are stored
-const CASE_STUDY_DATA_FILE = join(process.cwd(), 'data', 'case-studies.json');
+import { getStorageAdapter } from './storage-adapter';
 
 // Default case studies data
 const defaultCaseStudies: CaseStudy[] = [
@@ -218,39 +214,20 @@ Inventory management menjadi lebih akurat dan efisien dengan penghematan biaya 2
   }
 ];
 
-// Helper function to ensure data directory exists
-async function ensureDataDirectory(): Promise<void> {
-  const dataDir = join(process.cwd(), 'data');
-  try {
-    await fs.access(dataDir);
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true });
-  }
-}
-
-// Helper function to read case studies from file
+// Get case studies using universal storage adapter
 export async function readCaseStudiesFromFile(): Promise<CaseStudy[]> {
-  try {
-    await ensureDataDirectory();
-    const data = await fs.readFile(CASE_STUDY_DATA_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    // If file doesn't exist or is corrupted, return default data and create file
-    console.log('Case studies data file not found, creating with default data');
-    await writeCaseStudiesToFile(defaultCaseStudies);
-    return defaultCaseStudies;
-  }
+  const storage = getStorageAdapter();
+  return await storage.read('case-studies', defaultCaseStudies);
 }
 
-// Helper function to write case studies to file
+// Save case studies using universal storage adapter
 export async function writeCaseStudiesToFile(caseStudies: CaseStudy[]): Promise<void> {
-  try {
-    await ensureDataDirectory();
-    await fs.writeFile(CASE_STUDY_DATA_FILE, JSON.stringify(caseStudies, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error writing case studies to file:', error);
-    throw error;
-  }
+  const storage = getStorageAdapter();
+  // Sort by publishedAt (newest first)
+  const sortedStudies = caseStudies.sort((a, b) => 
+    new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+  await storage.write('case-studies', sortedStudies);
 }
 
 // Server-side functions for case study management

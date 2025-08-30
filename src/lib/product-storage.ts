@@ -1,40 +1,51 @@
 import { Product } from '@/types';
 import { products as defaultProducts } from '@/data/products';
-
-// In-memory storage for products (will be replaced by database in production)
-let productsData: Product[] = [...defaultProducts];
+import { getStorageAdapter } from './storage-adapter';
 
 export async function getProductsFromStorage(): Promise<Product[]> {
-  return productsData;
+  const storage = getStorageAdapter();
+  return await storage.read('products', defaultProducts);
 }
 
 export async function getProductByIdFromStorage(id: string): Promise<Product | null> {
-  return productsData.find(product => product.id === id) || null;
+  const products = await getProductsFromStorage();
+  return products.find(product => product.id === id) || null;
 }
 
 export async function getProductBySlugFromStorage(slug: string): Promise<Product | null> {
-  return productsData.find(product => product.slug === slug) || null;
+  const products = await getProductsFromStorage();
+  return products.find(product => product.slug === slug) || null;
 }
 
 export async function saveProductToStorage(product: Product): Promise<Product> {
-  const existingIndex = productsData.findIndex(p => p.id === product.id);
+  const storage = getStorageAdapter();
+  const products = await getProductsFromStorage();
+  
+  const existingIndex = products.findIndex(p => p.id === product.id);
   
   if (existingIndex >= 0) {
     // Update existing product
-    productsData[existingIndex] = product;
+    products[existingIndex] = product;
   } else {
     // Add new product
-    productsData.push(product);
+    products.push(product);
   }
   
+  await storage.write('products', products);
   return product;
 }
 
 export async function deleteProductFromStorage(id: string): Promise<boolean> {
-  const initialLength = productsData.length;
-  productsData = productsData.filter(product => product.id !== id);
-  return productsData.length < initialLength;
+  const storage = getStorageAdapter();
+  const products = await getProductsFromStorage();
+  const initialLength = products.length;
+  
+  const filteredProducts = products.filter(product => product.id !== id);
+  await storage.write('products', filteredProducts);
+  
+  return filteredProducts.length < initialLength;
 }
+
 
 export async function getProductCategoriesFromStorage(): Promise<string[]> {
   const categories = [...new Set(productsData.map(product => product.category))];

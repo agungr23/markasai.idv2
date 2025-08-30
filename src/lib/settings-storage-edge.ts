@@ -1,5 +1,7 @@
-// Edge Runtime compatible settings storage
-// Uses in-memory storage since file system is not available in Edge Runtime
+// Universal settings storage that works in both development and production
+// Uses hybrid storage strategy for reliability
+
+import { getStorageAdapter } from './storage-adapter';
 
 // Settings interface - Logo and maintenance mode
 export interface SiteSettings {
@@ -63,21 +65,13 @@ const defaultSettings: SiteSettings = {
   updatedAt: new Date().toISOString()
 };
 
-// In-memory storage for Edge Runtime compatibility
-let settingsCache: SiteSettings | null = null;
-
-// Load settings from cache or return defaults
+// Load settings using universal storage adapter
 export async function getSettingsFromStorage(): Promise<SiteSettings> {
-  if (settingsCache) {
-    return settingsCache;
-  }
-  
-  // Return defaults if no cache
-  settingsCache = { ...defaultSettings };
-  return settingsCache;
+  const storage = getStorageAdapter();
+  return await storage.read('settings', defaultSettings);
 }
 
-// Save settings to cache
+// Save settings using universal storage adapter
 export async function saveSettingsToStorage(settings: SiteSettings): Promise<void> {
   try {
     // Update timestamp
@@ -86,9 +80,9 @@ export async function saveSettingsToStorage(settings: SiteSettings): Promise<voi
       updatedAt: new Date().toISOString()
     };
     
-    // Save to cache
-    settingsCache = updatedSettings;
-    console.log('✅ Settings saved to cache successfully');
+    const storage = getStorageAdapter();
+    await storage.write('settings', updatedSettings);
+    console.log('✅ Settings saved successfully');
   } catch (error) {
     console.error('❌ Error saving settings:', error);
     throw new Error('Failed to save settings');
