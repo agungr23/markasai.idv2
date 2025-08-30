@@ -15,10 +15,10 @@ interface BlogPostPageProps {
 export async function generateStaticParams() {
   try {
     const blogPosts = await getBlogPostsFromStorage();
-    // Only generate static params for published posts dan batasi jumlah
+    // Only generate static params untuk posts utama saja
     const publishedPosts = blogPosts
       .filter(post => post.status === 'published' && post.slug && post.slug.trim() !== '')
-      .slice(0, 10); // Batasi maksimal 10 untuk menghindari timeout
+      .slice(0, 3); // Kurangi menjadi hanya 3 untuk menghindari timeout
     
     return publishedPosts.map((post) => ({
       slug: post.slug,

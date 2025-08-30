@@ -12,10 +12,18 @@ const nextConfig: NextConfig = {
     return 'markasai-build-' + Date.now();
   },
   
-  // Static generation configuration
+  // Static generation configuration dengan timeout lebih panjang
   typescript: {
     // Ignore build errors untuk development/build speed
     ignoreBuildErrors: false,
+  },
+  
+  // Konfigurasi untuk mengatasi build timeout
+  onDemandEntries: {
+    // Periode in ms sebelum entry disposed
+    maxInactiveAge: 25 * 1000,
+    // Nomor pages yang harus disimpan secara bersamaan
+    pagesBufferLength: 2,
   },
   
   // Ensure proper image optimization

@@ -1,60 +1,61 @@
+'use client';
+
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getCaseStudiesFromStorage, getCaseStudyBySlugFromStorage } from '@/lib/case-study-storage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, Building, ArrowLeft, TrendingUp, Users, Clock } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { CaseStudy } from '@/types';
 
-interface CaseStudyPageProps {
-  params: Promise<{ slug: string }>;
-}
+// Hapus generateStaticParams dan generateMetadata untuk menghindari build timeout
+// export async function generateStaticParams() { ... }
+// export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> { ... }
 
-export async function generateStaticParams() {
-  try {
-    const caseStudies = await getCaseStudiesFromStorage();
-    // Limit ke case studies yang benar-benar ada dan valid
-    return caseStudies
-      .filter(caseStudy => caseStudy.slug && caseStudy.slug.trim() !== '')
-      .slice(0, 10) // Batasi maksimal 10 untuk menghindari timeout
-      .map((caseStudy) => ({
-        slug: caseStudy.slug,
-      }));
-  } catch (error) {
-    console.error('Error generating static params for case studies:', error);
-    return []; // Return empty array jika ada error
+export default function CaseStudyPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [caseStudy, setCaseStudy] = useState<CaseStudy | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCaseStudy() {
+      try {
+        setLoading(true);
+        // Load case study dari API atau storage
+        const response = await fetch(`/api/default-data/case-studies`);
+        if (response.ok) {
+          const caseStudies = await response.json();
+          const foundCaseStudy = caseStudies.find((cs: CaseStudy) => cs.slug === slug);
+          setCaseStudy(foundCaseStudy || null);
+        }
+      } catch (error) {
+        console.error('Error loading case study:', error);
+        setCaseStudy(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (slug) {
+      loadCaseStudy();
+    }
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading case study...</p>
+        </div>
+      </div>
+    );
   }
-}
-
-export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const caseStudy = await getCaseStudyBySlugFromStorage(slug);
-
-  if (!caseStudy) {
-    return {
-      title: 'Case Study Tidak Ditemukan',
-    };
-  }
-
-  return {
-    title: caseStudy.seo.title,
-    description: caseStudy.seo.description,
-    keywords: caseStudy.seo.keywords,
-    openGraph: {
-      title: caseStudy.seo.title,
-      description: caseStudy.seo.description,
-      images: caseStudy.logo ? [caseStudy.logo] : [],
-      type: 'article',
-      publishedTime: caseStudy.publishedAt,
-    },
-  };
-}
-
-export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
-  const { slug } = await params;
-  const caseStudy = await getCaseStudyBySlugFromStorage(slug);
 
   if (!caseStudy) {
     notFound();
