@@ -1,0 +1,14 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#F3F4F6"/>
+  <rect x="50" y="50" width="700" height="500" fill="#E5E7EB" stroke="#D1D5DB" stroke-width="2" stroke-dasharray="10,10"/>
+  <circle cx="400" cy="250" r="80" fill="#9CA3AF"/>
+  <path d="M360 230L440 230L440 270L360 270Z" fill="#6B7280"/>
+  <path d="M380 240L420 240L420 250L380 250Z" fill="#4B5563"/>
+  <path d="M380 255L420 255L420 265L380 265Z" fill="#4B5563"/>
+  <text x="400" y="350" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="24" font-weight="bold">
+    Image Placeholder
+  </text>
+  <text x="400" y="380" text-anchor="middle" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="16">
+    800 x 600
+  </text>
+</svg>

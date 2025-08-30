@@ -1,0 +1,82 @@
+[
+  {
+    "name": "minto",
+    "position": "CEO",
+    "company": "PT. MAJU MUNDUR",
+    "avatar": "/media/1756221471456_icon-2.jpeg",
+    "content": "top markotop",
+    "rating": 5,
+    "featured": true,
+    "status": "published",
+    "seoTitle": "Testimonial minto",
+    "seoDescription": "top markotop",
+    "seoKeywords": [],
+    "seo": {
+      "title": "Testimonial minto",
+      "description": "top markotop",
+      "keywords": []
+    },
+    "id": "1756366606021",
+    "createdAt": "2025-08-28T07:36:46.021Z"
+  },
+  {
+    "name": "Sarah Wijaya",
+    "position": "Marketing Director",
+    "company": "PT. Digital Nusantara",
+    "avatar": "",
+    "content": "MarkasAI sangat membantu meningkatkan efisiensi tim marketing kami. ROI meningkat 200% dalam 3 bulan!",
+    "rating": 5,
+    "featured": true,
+    "status": "published",
+    "seoTitle": "Testimonial Sarah Wijaya",
+    "seoDescription": "MarkasAI sangat membantu meningkatkan efisiensi tim marketing kami. ROI meningkat 200% dalam 3 bulan!",
+    "seoKeywords": ["marketing", "roi", "efisiensi"],
+    "seo": {
+      "title": "Testimonial Sarah Wijaya",
+      "description": "MarkasAI sangat membantu meningkatkan efisiensi tim marketing kami. ROI meningkat 200% dalam 3 bulan!",
+      "keywords": ["marketing", "roi", "efisiensi"]
+    },
+    "id": "1756366606022",
+    "createdAt": "2025-08-28T08:00:00.000Z"
+  },
+  {
+    "name": "Budi Santoso",
+    "position": "Founder",
+    "company": "StartupTech Indonesia",
+    "avatar": "",
+    "content": "Sebagai startup, kami butuh solusi yang cost-effective. MarkasAI memberikan value yang luar biasa dengan harga yang terjangkau.",
+    "rating": 5,
+    "featured": true,
+    "status": "published",
+    "seoTitle": "Testimonial Budi Santoso",
+    "seoDescription": "Sebagai startup, kami butuh solusi yang cost-effective. MarkasAI memberikan value yang luar biasa dengan harga yang terjangkau.",
+    "seoKeywords": ["startup", "cost-effective", "value"],
+    "seo": {
+      "title": "Testimonial Budi Santoso",
+      "description": "Sebagai startup, kami butuh solusi yang cost-effective. MarkasAI memberikan value yang luar biasa dengan harga yang terjangkau.",
+      "keywords": ["startup", "cost-effective", "value"]
+    },
+    "id": "1756366606023",
+    "createdAt": "2025-08-28T08:15:00.000Z"
+  },
+  {
+    "name": "Lisa Chen",
+    "position": "Operations Manager",
+    "company": "PT. Maju Bersama",
+    "avatar": "",
+    "content": "Customer support AI dari MarkasAI menghemat waktu tim kami 70%. Sekarang bisa fokus ke hal-hal yang lebih strategis.",
+    "rating": 4,
+    "featured": true,
+    "status": "published",
+    "seoTitle": "Testimonial Lisa Chen",
+    "seoDescription": "Customer support AI dari MarkasAI menghemat waktu tim kami 70%. Sekarang bisa fokus ke hal-hal yang lebih strategis.",
+    "seoKeywords": ["customer support", "ai", "efisiensi"],
+    "seo": {
+      "title": "Testimonial Lisa Chen",
+      "description": "Customer support AI dari MarkasAI menghemat waktu tim kami 70%. Sekarang bisa fokus ke hal-hal yang lebih strategis.",
+      "keywords": ["customer support", "ai", "efisiensi"]
+    },
+    "id": "1756366606024",
+    "createdAt": "2025-08-28T08:30:00.000Z"
+  }
+]

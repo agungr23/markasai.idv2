@@ -1,0 +1,138 @@
+[
+  {
+    "id": "1",
+    "title": "TokoBudi.com: Meningkatkan Penjualan 300% dengan AI",
+    "slug": "tokobudi-meningkatkan-penjualan-300-persen",
+    "summary": "Bagaimana TokoBudi.com menggunakan AI untuk meningkatkan penjualan online mereka hingga 300% dalam 6 bulan.",
+    "logo": "/media/1756221471456_icon-2.jpeg",
+    "client": "TokoBudi.com",
+    "industry": "E-commerce",
+    "publishedAt": "2024-01-20",
+    "metrics": [
+      {
+        "label": "Peningkatan Penjualan",
+        "value": "300%",
+        "description": "Dalam 6 bulan pertama"
+      },
+      {
+        "label": "Response Time",
+        "value": "2 menit",
+        "description": "Dari 2 jam sebelumnya"
+      },
+      {
+        "label": "Customer Satisfaction",
+        "value": "95%",
+        "description": "Rating kepuasan pelanggan"
+      }
+    ],
+    "body": "# TokoBudi.com: Transformasi Digital dengan AI\n\n## Latar Belakang\n\nTokoBudi.com adalah toko online yang menjual produk elektronik dan gadget. Dengan 5000+ produk dan 100+ transaksi per hari, mereka menghadapi tantangan dalam:\n\n- Customer service yang lambat\n- Konversi yang rendah\n- Manajemen inventory yang manual\n\n## Solusi yang Diimplementasikan\n\n### 1. AI Customer Support\n- Chatbot WhatsApp 24/7\n- Auto-reply untuk pertanyaan umum\n- Routing ke sales team untuk pertanyaan kompleks\n\n### 2. AI Copy & Marketing\n- Product description otomatis\n- Social media content generation\n- Email marketing personalization\n\n### 3. AI Business Assistant\n- Inventory forecasting\n- Sales analytics\n- Customer behavior analysis\n\n## Hasil yang Dicapai\n\nDalam 6 bulan implementasi, TokoBudi.com berhasil mencapai:\n- **300% peningkatan penjualan** dari Rp 50 juta menjadi Rp 200 juta per bulan\n- **Response time 2 menit** dari sebelumnya 2 jam\n- **95% customer satisfaction** rating\n- **50% pengurangan biaya operasional**\n\n## Testimoni\n\n\"AI dari MarkasAI benar-benar mengubah bisnis kami. Sekarang kami bisa fokus pada strategi bisnis, sementara AI menangani operasional harian.\" - Budi Santoso, Founder TokoBudi.com",
+    "seo": {
+      "title": "Case Study: TokoBudi.com Meningkatkan Penjualan 300% dengan AI",
+      "description": "Pelajari bagaimana TokoBudi.com menggunakan AI untuk meningkatkan penjualan online hingga 300% dalam 6 bulan.",
+      "keywords": [
+        "case study",
+        "ai ecommerce",
+        "peningkatan penjualan",
+        "tokobudi",
+        "markasai"
+      ]
+    },
+    "seoTitle": "Case Study: TokoBudi.com Meningkatkan Penjualan 300% dengan AI",
+    "seoDescription": "Pelajari bagaimana TokoBudi.com menggunakan AI untuk meningkatkan penjualan online hingga 300% dalam 6 bulan.",
+    "seoKeywords": [
+      "case study",
+      "ai ecommerce",
+      "peningkatan penjualan",
+      "tokobudi",
+      "markasai"
+    ],
+    "status": "published"
+  },
+  {
+    "id": "2",
+    "title": "PT Maju Jaya: Otomasi Marketing ROI 300%",
+    "slug": "pt-maju-jaya-ai-marketing-automation",
+    "summary": "Implementasi AI untuk otomasi campaign marketing yang menghasilkan ROI 300% dalam 6 bulan.",
+    "logo": "/images/case-studies/maju-jaya-logo.png",
+    "client": "PT Maju Jaya",
+    "industry": "Manufacturing",
+    "publishedAt": "2024-01-10",
+    "metrics": [
+      {
+        "label": "Marketing ROI",
+        "value": "+300%",
+        "description": "Dalam 6 bulan pertama"
+      },
+      {
+        "label": "Lead Generation",
+        "value": "+150%",
+        "description": "Peningkatan qualified leads"
+      },
+      {
+        "label": "Campaign Efficiency",
+        "value": "+200%",
+        "description": "Efisiensi campaign management"
+      }
+    ],
+    "body": "# PT Maju Jaya: Otomasi Marketing ROI 300%\n\n## Background\nPT Maju Jaya adalah perusahaan manufaktur yang ingin meningkatkan efektivitas marketing digital mereka.\n\n## Implementation\n- AI-powered lead scoring\n- Automated email campaigns\n- Social media content automation\n- Performance analytics dashboard\n\n## Results\nMarketing ROI meningkat 300% dengan lead generation yang lebih qualified dan campaign management yang efisien.",
+    "seo": {
+      "title": "Case Study: PT Maju Jaya Otomasi Marketing ROI 300%",
+      "description": "Implementasi AI untuk otomasi campaign marketing yang menghasilkan ROI 300% dalam 6 bulan.",
+      "keywords": [
+        "case study",
+        "ai marketing",
+        "marketing automation",
+        "roi",
+        "manufacturing"
+      ]
+    },
+    "seoTitle": "Case Study: PT Maju Jaya Otomasi Marketing ROI 300%",
+    "seoDescription": "Implementasi AI untuk otomasi campaign marketing yang menghasilkan ROI 300% dalam 6 bulan.",
+    "seoKeywords": [
+      "case study",
+      "ai marketing",
+      "marketing automation",
+      "roi",
+      "manufacturing"
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Klinik Sehat: AI Assistant 24/7 Patient Care",
+    "slug": "klinik-sehat-ai-customer-support",
+    "summary": "Klinik Sehat menggunakan AI assistant untuk menangani appointment booking dan pertanyaan pasien 24/7.",
+    "logo": "/images/case-studies/klinik-sehat-logo.png",
+    "client": "Klinik Sehat",
+    "industry": "Healthcare",
+    "publishedAt": "2024-01-05",
+    "metrics": [
+      {
+        "label": "Appointment Booking",
+        "value": "+80%",
+        "description": "Peningkatan booking otomatis"
+      },
+      {
+        "label": "Patient Satisfaction",
+        "value": "95%",
+        "description": "Rating kepuasan pasien"
+      },
+      {
+        "label": "Response Time",
+        "value": "24/7",
+        "description": "Layanan tanpa henti"
+      }
+    ],
+    "body": "# Klinik Sehat: AI Assistant 24/7 Patient Care\n\n## Background\nKlinik Sehat membutuhkan sistem yang dapat menangani appointment booking dan pertanyaan pasien di luar jam operasional.\n\n## Implementation\n- AI assistant untuk appointment booking\n- FAQ automation\n- Symptom checker basic\n- Integration dengan sistem klinik\n\n## Results\nPelayanan pasien menjadi lebih responsif dan efisien dengan tingkat kepuasan 95%.",
+    "seo": {
+      "title": "Case Study: Klinik Sehat AI Assistant 24/7 Patient Care",
+      "description": "Klinik Sehat menggunakan AI assistant untuk menangani appointment booking dan pertanyaan pasien 24/7.",
+      "keywords": [
+        "case study",
+        "ai healthcare",
+        "patient care",
+        "appointment booking",
+        "klinik"
+      ]
+    }
+  }
+]

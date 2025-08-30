@@ -1,0 +1,261 @@
+import { Product } from '@/types';
+
+export const products: Product[] = [
+  {
+    id: '1',
+    title: 'VIDABOT',
+    slug: 'vidabot',
+    shortDesc: 'Platform AI untuk video promosi/afiliasi dengan script, voice, subtitle, dan visual otomatis.',
+    description: 'VIDABOT adalah solusi AI terdepan untuk membuat video promosi dan afiliasi berkualitas tinggi. Dengan teknologi AI canggih, Anda dapat menghasilkan script menarik, voice over natural, subtitle akurat, dan visual yang memukau hanya dalam beberapa klik.',
+    features: [
+      'AI Script Generator - Buat script menarik otomatis',
+      'Natural Voice Over - Suara AI yang terdengar natural',
+      'Auto Subtitle - Subtitle akurat dalam berbagai bahasa',
+      'Visual AI - Gambar dan animasi otomatis',
+      'Template Library - Ribuan template siap pakai',
+      'Export HD - Video berkualitas tinggi untuk semua platform'
+    ],
+    benefits: [
+      'Hemat waktu hingga 90% dalam produksi video',
+      'Tidak perlu skill editing video profesional',
+      'Konsisten dalam kualitas dan branding',
+      'Cocok untuk semua platform media sosial'
+    ],
+    heroImage: '/images/products/vidabot-hero.jpg',
+    gallery: [
+      '/images/products/vidabot-1.jpg',
+      '/images/products/vidabot-2.jpg',
+      '/images/products/vidabot-3.jpg'
+    ],
+    category: 'Video & Content',
+    priceTiers: [
+      {
+        name: 'Basic',
+        price: 299000,
+        period: 'monthly',
+        features: [
+          '10 video per bulan',
+          'Template dasar',
+          'Export 720p',
+          'Email support'
+        ]
+      },
+      {
+        name: 'Pro',
+        price: 599000,
+        period: 'monthly',
+        popular: true,
+        features: [
+          '50 video per bulan',
+          'Semua template premium',
+          'Export 1080p',
+          'Priority support',
+          'Custom branding'
+        ]
+      }
+    ],
+    faq: [
+      {
+        question: 'Apakah cocok untuk pemula?',
+        answer: 'Ya, VIDABOT dirancang khusus untuk pemula dengan interface yang sangat mudah digunakan.'
+      },
+      {
+        question: 'Berapa lama proses pembuatan video?',
+        answer: 'Rata-rata 5-10 menit untuk video berdurasi 1-2 menit.'
+      }
+    ],
+    seo: {
+      title: 'VIDABOT - AI Video Creator untuk Promosi & Afiliasi',
+      description: 'Buat video promosi dan afiliasi berkualitas tinggi dengan AI. Script, voice over, subtitle, dan visual otomatis dalam hitungan menit.',
+      keywords: ['ai video creator', 'video promosi', 'video afiliasi', 'ai marketing']
+    }
+  },
+  {
+    id: '2',
+    title: 'AI Business Assistant',
+    slug: 'ai-business-assistant',
+    shortDesc: 'Asisten AI untuk operasional, riset, ringkas dokumen, dan rekomendasi keputusan bisnis.',
+    description: 'AI Business Assistant adalah solusi cerdas untuk mengotomatisasi tugas-tugas operasional bisnis Anda. Dari riset pasar hingga analisis dokumen, asisten AI ini membantu Anda membuat keputusan yang lebih baik dan cepat.',
+    features: [
+      'Document Analysis - Analisis dan ringkas dokumen otomatis',
+      'Market Research - Riset pasar dan kompetitor real-time',
+      'Decision Support - Rekomendasi keputusan berbasis data',
+      'Task Automation - Otomatisasi tugas rutin',
+      'Report Generation - Laporan bisnis otomatis',
+      'Integration Ready - Integrasi dengan tools bisnis populer'
+    ],
+    benefits: [
+      'Tingkatkan efisiensi operasional hingga 70%',
+      'Keputusan bisnis lebih akurat dan cepat',
+      'Hemat biaya operasional signifikan',
+      'Fokus pada strategi, bukan tugas rutin'
+    ],
+    heroImage: '/images/products/ai-assistant-hero.jpg',
+    gallery: [
+      '/images/products/ai-assistant-1.jpg',
+      '/images/products/ai-assistant-2.jpg'
+    ],
+    category: 'Business Operations',
+    priceTiers: [
+      {
+        name: 'Starter',
+        price: 199000,
+        period: 'monthly',
+        features: [
+          '100 queries per bulan',
+          'Basic document analysis',
+          'Email support'
+        ]
+      },
+      {
+        name: 'Business',
+        price: 499000,
+        period: 'monthly',
+        popular: true,
+        features: [
+          'Unlimited queries',
+          'Advanced analytics',
+          'Priority support',
+          'Custom integrations'
+        ]
+      }
+    ],
+    faq: [
+      {
+        question: 'Apakah data bisnis saya aman?',
+        answer: 'Ya, kami menggunakan enkripsi tingkat enterprise dan tidak menyimpan data sensitif.'
+      }
+    ],
+    seo: {
+      title: 'AI Business Assistant - Asisten AI untuk Operasional Bisnis',
+      description: 'Otomatisasi operasional bisnis dengan AI. Riset, analisis dokumen, dan rekomendasi keputusan cerdas.',
+      keywords: ['ai business assistant', 'otomatisasi bisnis', 'ai operasional']
+    }
+  },
+  {
+    id: '3',
+    title: 'AI Copy & Marketing',
+    slug: 'ai-copy-marketing',
+    shortDesc: 'Generator iklan/copy untuk FB/IG/Shopee/Marketplace, caption, dan headline yang converting.',
+    description: 'AI Copy & Marketing adalah solusi terdepan untuk menghasilkan copy marketing yang converting. Dari iklan Facebook hingga deskripsi produk marketplace, AI ini memahami psikologi konsumen dan tren terkini.',
+    features: [
+      'Multi-Platform Copy - FB, IG, Shopee, Tokopedia, dll',
+      'Psychology-Based - Copy berdasarkan psikologi konsumen',
+      'A/B Test Ready - Variasi copy untuk testing',
+      'Trend Analysis - Mengikuti tren marketing terkini',
+      'Brand Voice - Konsisten dengan suara brand Anda',
+      'Performance Tracking - Analisis performa copy'
+    ],
+    benefits: [
+      'Tingkatkan conversion rate hingga 300%',
+      'Hemat biaya copywriter profesional',
+      'Copy yang selalu fresh dan engaging',
+      'Konsisten di semua platform'
+    ],
+    heroImage: '/images/products/ai-copy-hero.jpg',
+    gallery: [
+      '/images/products/ai-copy-1.jpg',
+      '/images/products/ai-copy-2.jpg'
+    ],
+    category: 'Marketing & Sales',
+    priceTiers: [
+      {
+        name: 'Basic',
+        price: 149000,
+        period: 'monthly',
+        features: [
+          '200 copy per bulan',
+          'Template dasar',
+          'Email support'
+        ]
+      },
+      {
+        name: 'Pro',
+        price: 399000,
+        period: 'monthly',
+        popular: true,
+        features: [
+          'Unlimited copy',
+          'A/B test variants',
+          'Brand voice training',
+          'Priority support'
+        ]
+      }
+    ],
+    faq: [
+      {
+        question: 'Apakah copy yang dihasilkan original?',
+        answer: 'Ya, setiap copy dihasilkan secara unik berdasarkan input dan konteks yang Anda berikan.'
+      }
+    ],
+    seo: {
+      title: 'AI Copy & Marketing - Generator Copy Marketing yang Converting',
+      description: 'Buat copy marketing yang converting untuk semua platform. FB, IG, Shopee, dan marketplace lainnya.',
+      keywords: ['ai copywriting', 'marketing copy', 'facebook ads', 'instagram marketing']
+    }
+  },
+  {
+    id: '4',
+    title: 'AI Customer Support',
+    slug: 'ai-customer-support',
+    shortDesc: 'Auto-reply cerdas 24/7 untuk WhatsApp dan chat, dengan FAQ dan routing dasar.',
+    description: 'AI Customer Support menghadirkan layanan pelanggan 24/7 yang cerdas dan responsif. Dengan pemahaman konteks yang baik, AI ini dapat menangani berbagai pertanyaan pelanggan dan melakukan routing ke tim yang tepat.',
+    features: [
+      'WhatsApp Integration - Integrasi langsung dengan WhatsApp Business',
+      'Smart Routing - Arahkan chat ke departemen yang tepat',
+      'FAQ Database - Database pertanyaan yang terus belajar',
+      'Multi-Language - Dukungan berbagai bahasa',
+      'Sentiment Analysis - Deteksi emosi pelanggan',
+      'Human Handover - Transfer ke agent manusia saat diperlukan'
+    ],
+    benefits: [
+      'Respon time 24/7 tanpa henti',
+      'Tingkatkan customer satisfaction',
+      'Kurangi beban kerja tim support',
+      'Konsisten dalam kualitas layanan'
+    ],
+    heroImage: '/images/products/ai-support-hero.jpg',
+    gallery: [
+      '/images/products/ai-support-1.jpg',
+      '/images/products/ai-support-2.jpg'
+    ],
+    category: 'Customer Service',
+    priceTiers: [
+      {
+        name: 'Starter',
+        price: 299000,
+        period: 'monthly',
+        features: [
+          '1000 chat per bulan',
+          'Basic FAQ',
+          'WhatsApp integration',
+          'Email support'
+        ]
+      },
+      {
+        name: 'Business',
+        price: 699000,
+        period: 'monthly',
+        popular: true,
+        features: [
+          'Unlimited chat',
+          'Advanced routing',
+          'Multi-platform',
+          'Priority support',
+          'Custom training'
+        ]
+      }
+    ],
+    faq: [
+      {
+        question: 'Berapa akurat AI dalam menjawab pertanyaan?',
+        answer: 'Akurasi mencapai 95% untuk pertanyaan umum dan terus belajar dari interaksi.'
+      }
+    ],
+    seo: {
+      title: 'AI Customer Support - Layanan Pelanggan Otomatis 24/7',
+      description: 'Layanan pelanggan AI yang cerdas untuk WhatsApp dan chat. Auto-reply 24/7 dengan akurasi tinggi.',
+      keywords: ['ai customer support', 'whatsapp bot', 'chatbot', 'customer service']
+    }
+  }
+];
