@@ -12,9 +12,9 @@ const isEdgeRuntime = (() => {
       (
         // Check for Edge Runtime indicators
         'EdgeRuntime' in globalThis ||
-        (globalThis as any).process?.env?.NEXT_RUNTIME === 'edge' ||
+        (globalThis as { process?: { env?: { NEXT_RUNTIME?: string } } }).process?.env?.NEXT_RUNTIME === 'edge' ||
         // Check if we're in a serverless environment without file system access
-        ('process' in globalThis && !(globalThis as any).process?.versions?.node)
+        ('process' in globalThis && !(globalThis as { process?: { versions?: { node?: string } } }).process?.versions?.node)
       )
     );
   } catch {
@@ -28,43 +28,11 @@ export interface StorageAdapter {
   exists(key: string): Promise<boolean>;
 }
 
-class FileSystemStorage implements StorageAdapter {
-  // This class is only used in Node.js environments
-  // We'll handle the file system operations through dynamic imports
-  private dataDir: string;
-
-  constructor() {
-    // This constructor should never be called in Edge Runtime
-    if (isEdgeRuntime) {
-      throw new Error('FileSystemStorage not supported in Edge Runtime');
-    }
-    
-    // For Node.js environments, we'll use a simple fallback
-    this.dataDir = '/tmp/markasai-data';
-  }
-
-  async read<T>(key: string, defaultValue: T): Promise<T> {
-    // In Edge Runtime, this should never be called
-    // Return default value as fallback
-    console.warn('File system read not available, using default value');
-    return defaultValue;
-  }
-
-  async write<T>(key: string, data: T): Promise<void> {
-    // In Edge Runtime, this should never be called
-    console.warn('File system write not available, data not persisted');
-  }
-
-  async exists(key: string): Promise<boolean> {
-    return false;
-  }
-}
-
 class InMemoryStorage implements StorageAdapter {
-  private static store = new Map<string, any>();
+  private static store = new Map<string, unknown>();
 
   async read<T>(key: string, defaultValue: T): Promise<T> {
-    const data = InMemoryStorage.store.get(key);
+    const data = InMemoryStorage.store.get(key) as T | undefined;
     if (data !== undefined) {
       return data;
     }
@@ -79,29 +47,6 @@ class InMemoryStorage implements StorageAdapter {
 
   async exists(key: string): Promise<boolean> {
     return InMemoryStorage.store.has(key);
-  }
-}
-
-class HybridStorage implements StorageAdapter {
-  private memoryStorage = new InMemoryStorage();
-
-  constructor() {
-    // In Edge Runtime, we only use memory storage
-    // No file system operations
-  }
-
-  async read<T>(key: string, defaultValue: T): Promise<T> {
-    // Always use memory storage for Edge Runtime compatibility
-    return await this.memoryStorage.read(key, defaultValue);
-  }
-
-  async write<T>(key: string, data: T): Promise<void> {
-    // Always write to memory storage
-    await this.memoryStorage.write(key, data);
-  }
-
-  async exists(key: string): Promise<boolean> {
-    return await this.memoryStorage.exists(key);
   }
 }
 

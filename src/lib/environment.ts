@@ -7,22 +7,24 @@ export function getEnvironmentInfo() {
       return (
         typeof globalThis !== 'undefined' && 
         'process' in globalThis &&
-        typeof (globalThis as any).process !== 'undefined'
+        typeof (globalThis as { process?: unknown }).process !== 'undefined'
       );
     } catch {
       return false;
     }
   })();
   
-  const isProduction = hasProcess ? (globalThis as any).process.env.NODE_ENV === 'production' : false;
-  const isVercel = hasProcess ? (globalThis as any).process.env.VERCEL === '1' : false;
-  const isNetlify = hasProcess ? (globalThis as any).process.env.NETLIFY === 'true' : false;
+  const processEnv = hasProcess ? ((globalThis as unknown) as { process: { env: Record<string, string | undefined> } }).process.env : {};
+  
+  const isProduction = processEnv.NODE_ENV === 'production';
+  const isVercel = processEnv.VERCEL === '1';
+  const isNetlify = processEnv.NETLIFY === 'true';
   const isServer = typeof window === 'undefined';
   
   // Runtime detection with fallback
   let runtime = 'nodejs';
   if (hasProcess) {
-    runtime = (globalThis as any).process.env.NEXT_RUNTIME || 'nodejs';
+    runtime = processEnv.NEXT_RUNTIME || 'nodejs';
   } else if (typeof globalThis !== 'undefined' && 'EdgeRuntime' in globalThis) {
     runtime = 'edge';
   }

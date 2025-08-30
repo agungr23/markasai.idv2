@@ -48,7 +48,8 @@ export async function deleteProductFromStorage(id: string): Promise<boolean> {
 
 
 export async function getProductCategoriesFromStorage(): Promise<string[]> {
-  const categories = [...new Set(productsData.map(product => product.category))];
+  const products = await getProductsFromStorage();
+  const categories = [...new Set(products.map((product: Product) => product.category))] as string[];
   return categories.sort();
 }
 

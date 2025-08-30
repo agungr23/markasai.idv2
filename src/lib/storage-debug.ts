@@ -9,7 +9,7 @@ export interface StorageHealthStatus {
   canRead: boolean;
   canWrite: boolean;
   error?: string;
-  environment: any;
+  environment: ReturnType<typeof getEnvironmentInfo>;
 }
 
 export async function checkStorageHealth(): Promise<StorageHealthStatus> {
@@ -22,10 +22,10 @@ export async function checkStorageHealth(): Promise<StorageHealthStatus> {
     await storage.write('health-check', testData);
     
     // Test read operation
-    const readData = await storage.read('health-check', null);
+    const readData = await storage.read('health-check', null) as { test?: string } | null;
     
     const canWrite = true;
-    const canRead = readData && readData.test === 'health-check';
+    const canRead = Boolean(readData && readData.test === 'health-check');
     
     return {
       working: canRead && canWrite,
