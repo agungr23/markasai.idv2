@@ -26,15 +26,15 @@ const nextConfig: NextConfig = {
     pagesBufferLength: 2,
   },
   
-  // Ensure proper image optimization for Domainesia
+  // Ensure proper image optimization for Vercel
   images: {
     domains: [],
-    unoptimized: true, // Required for static export to Domainesia
+    unoptimized: false, // Enable optimization on Vercel
   },
   
-  // Output configuration for Domainesia deployment
-  output: 'export', // Enable static export for Domainesia
-  trailingSlash: true, // Required for static hosting
+  // Output configuration - Vercel deployment (serverless)
+  output: undefined, // Default serverless for Vercel
+  trailingSlash: false,
   
   // Enable compression
   compress: true,
