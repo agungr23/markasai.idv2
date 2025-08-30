@@ -1,5 +1,5 @@
-// Universal storage adapter - JSON file dengan fallback memory untuk Edge Runtime
-// Menggunakan JSON file ketika memungkinkan, memory untuk kompatibilitas
+// Universal storage adapter - Edge Runtime compatible
+// Menggunakan strategy detection tanpa Node.js modules
 import { getEnvironmentInfo, logStorageInfo } from './environment';
 
 export interface StorageAdapter {
@@ -8,7 +8,7 @@ export interface StorageAdapter {
   exists(key: string): Promise<boolean>;
 }
 
-// Pure memory storage untuk Edge Runtime
+// Pure memory storage - 100% Edge Runtime compatible
 class InMemoryStorage implements StorageAdapter {
   private static store = new Map<string, unknown>();
 
@@ -31,113 +31,65 @@ class InMemoryStorage implements StorageAdapter {
   }
 }
 
-// JSON file storage dengan memory fallback
-class HybridStorage implements StorageAdapter {
-  private memoryCache = new Map<string, unknown>();
-  private fileSystemAvailable: boolean | null = null;
+// Enhanced memory storage dengan JSON fallback untuk default values
+class EnhancedMemoryStorage implements StorageAdapter {
+  private static store = new Map<string, unknown>();
+  private static initialized = new Set<string>();
 
-  private getFilePath(key: string): string {
-    const fileMap: Record<string, string> = {
-      'products': 'public/data/products.json',
-      'blog-posts': 'data/blog-posts.json',
-      'case-studies': 'data/case-studies.json',
-      'testimonials': 'data/testimonials.json',
-      'settings': 'data/settings.json'
-    };
-    return fileMap[key] || `data/${key}.json`;
-  }
-
-  private async checkFileSystemAccess(): Promise<boolean> {
-    if (this.fileSystemAvailable !== null) {
-      return this.fileSystemAvailable;
+  private async loadDefaultData<T>(key: string, defaultValue: T): Promise<T> {
+    // Hanya load default data sekali per key
+    if (EnhancedMemoryStorage.initialized.has(key)) {
+      return defaultValue;
     }
 
     try {
-      // Cek apakah environment mendukung file system
-      if (typeof window !== 'undefined') {
-        this.fileSystemAvailable = false;
-        return false;
-      }
-      
-      // Cek apakah process tersedia (tidak di Edge Runtime)
-      if (typeof process === 'undefined') {
-        this.fileSystemAvailable = false;
-        return false;
-      }
+      // Coba load data dari public URL jika di browser/development
+      const jsonPaths: Record<string, string> = {
+        'products': '/data/products.json',
+        'blog-posts': '/api/default-data/blog-posts',
+        'case-studies': '/api/default-data/case-studies', 
+        'testimonials': '/api/default-data/testimonials',
+        'settings': '/api/default-data/settings'
+      };
 
-      // Test dengan dynamic import untuk menghindari build error
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      
-      // Test akses file yang pasti ada
-      await fs.access(path.join(process.cwd(), 'package.json'));
-      
-      this.fileSystemAvailable = true;
-      return true;
-    } catch {
-      this.fileSystemAvailable = false;
-      return false;
-    }
-  }
-
-  async read<T>(key: string, defaultValue: T): Promise<T> {
-    // Cek cache memory dulu
-    const cached = this.memoryCache.get(key) as T | undefined;
-    if (cached !== undefined) {
-      return cached;
-    }
-
-    try {
-      if (await this.checkFileSystemAccess()) {
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        const filePath = path.join(process.cwd(), this.getFilePath(key));
-        
-        const data = await fs.readFile(filePath, 'utf-8');
-        const parsed = JSON.parse(data) as T;
-        
-        // Cache ke memory untuk performa
-        this.memoryCache.set(key, parsed);
-        console.log(`📁 Data dimuat dari JSON: ${this.getFilePath(key)}`);
-        return parsed;
+      const path = jsonPaths[key];
+      if (path && typeof fetch !== 'undefined') {
+        const response = await fetch(path);
+        if (response.ok) {
+          const data = await response.json() as T;
+          EnhancedMemoryStorage.store.set(key, data);
+          EnhancedMemoryStorage.initialized.add(key);
+          console.log(`📁 Data default dimuat untuk ${key}`);
+          return data;
+        }
       }
     } catch (error) {
-      console.log(`File JSON untuk ${key} tidak ditemukan, menggunakan nilai default`);
+      console.log(`Menggunakan fallback default untuk ${key}`);
     }
 
-    // Fallback ke default dan cache
-    this.memoryCache.set(key, defaultValue);
+    EnhancedMemoryStorage.initialized.add(key);
     return defaultValue;
   }
 
-  async write<T>(key: string, data: T): Promise<void> {
-    // Selalu update cache memory
-    this.memoryCache.set(key, data);
-
-    try {
-      if (await this.checkFileSystemAccess()) {
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        const filePath = path.join(process.cwd(), this.getFilePath(key));
-        
-        // Pastikan direktori ada
-        const dir = path.dirname(filePath);
-        await fs.mkdir(dir, { recursive: true });
-        
-        // Tulis file JSON dengan format yang rapi
-        await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
-        console.log(`💾 Data disimpan ke file JSON: ${this.getFilePath(key)}`);
-      } else {
-        console.log(`💾 Data disimpan ke memory: ${key} (file system tidak tersedia)`);
-      }
-    } catch (error) {
-      console.warn(`⚠️ Tidak bisa menyimpan ke file JSON untuk ${key}:`, error);
-      console.log(`💾 Data disimpan ke memory saja: ${key}`);
+  async read<T>(key: string, defaultValue: T): Promise<T> {
+    const data = EnhancedMemoryStorage.store.get(key) as T | undefined;
+    if (data !== undefined) {
+      return data;
     }
+
+    // Load default data jika belum ada
+    const loadedData = await this.loadDefaultData(key, defaultValue);
+    await this.write(key, loadedData);
+    return loadedData;
+  }
+
+  async write<T>(key: string, data: T): Promise<void> {
+    EnhancedMemoryStorage.store.set(key, data);
+    console.log(`💾 Data disimpan ke enhanced memory: ${key}`);
   }
 
   async exists(key: string): Promise<boolean> {
-    return this.memoryCache.has(key);
+    return EnhancedMemoryStorage.store.has(key);
   }
 }
 
@@ -150,9 +102,10 @@ export async function createStorageAdapter(): Promise<StorageAdapter> {
     logStorageInfo();
   }
   
-  // Coba gunakan hybrid storage yang mendukung JSON file
-  console.log('🔧 Menggunakan hybrid storage (JSON file + memory fallback)');
-  return new HybridStorage();
+  // Selalu gunakan enhanced memory storage untuk kompatibilitas universal
+  // Enhanced version akan coba load default data dari JSON jika memungkinkan
+  console.log('🔧 Menggunakan enhanced memory storage (universal compatible)');
+  return new EnhancedMemoryStorage();
 }
 
 // Singleton instance
