@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getPublishedTestimonialsFromStorage } from '@/lib/testimonial-storage';
+import { getTestimonials } from '@/lib/storage-json-only';
 
 export async function GET() {
   try {
-    const testimonials = await getPublishedTestimonialsFromStorage();
+    const allTestimonials = await getTestimonials();
+    // Filter published testimonials
+    const publishedTestimonials = allTestimonials.filter(testimonial => 
+      testimonial.status === 'published'
+    );
     
     return NextResponse.json({
       success: true,
-      testimonials
+      testimonials: publishedTestimonials
     });
   } catch (error) {
     console.error('Error fetching published testimonials:', error);

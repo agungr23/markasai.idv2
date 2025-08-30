@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getCaseStudiesFromStorage,
-  addCaseStudyToStorage,
-  updateCaseStudyInStorage,
-  deleteCaseStudyFromStorage,
-  getCaseStudyByIdFromStorage,
-  getCaseStudyBySlugFromStorage
-} from '@/lib/case-study-storage';
+  getCaseStudies,
+  addCaseStudy,
+  updateCaseStudy,
+  deleteCaseStudy,
+  getCaseStudyById,
+  getCaseStudyBySlug
+} from '@/lib/storage-json-only';
 import { CaseStudy } from '@/types';
 
 // GET - Get all case studies
 export async function GET() {
   try {
-    const caseStudies = await getCaseStudiesFromStorage();
+    const caseStudies = await getCaseStudies();
     return NextResponse.json({
       success: true,
       caseStudies: caseStudies
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingCaseStudy = await getCaseStudyBySlugFromStorage(slug);
+    const existingCaseStudy = await getCaseStudyBySlug(slug);
     if (existingCaseStudy) {
       return NextResponse.json(
         { success: false, error: 'Slug already exists' },
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new ID
-    const allCaseStudies = await getCaseStudiesFromStorage();
+    const allCaseStudies = await getCaseStudies();
     const newId = allCaseStudies.length > 0
       ? (Math.max(...allCaseStudies.map(cs => parseInt(cs.id) || 0)) + 1).toString()
       : '1';
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Add to case studies data
-    await addCaseStudyToStorage(newCaseStudy);
+    await addCaseStudy(newCaseStudy);
 
     return NextResponse.json({
       success: true,
@@ -108,7 +108,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Find existing case study
-    const existingCaseStudy = await getCaseStudyByIdFromStorage(id);
+    const existingCaseStudy = await getCaseStudyById(id);
     if (!existingCaseStudy) {
       return NextResponse.json(
         { success: false, error: 'Case study not found' },
@@ -118,7 +118,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if new slug conflicts with other case studies
     if (slug) {
-      const conflictingCaseStudy = await getCaseStudyBySlugFromStorage(slug);
+      const conflictingCaseStudy = await getCaseStudyBySlug(slug);
       if (conflictingCaseStudy && conflictingCaseStudy.id !== id) {
         return NextResponse.json(
           { success: false, error: 'Slug already exists' },
@@ -145,7 +145,7 @@ export async function PUT(request: NextRequest) {
       }
     };
 
-    const updatedCaseStudy = await updateCaseStudyInStorage(id, updateData);
+    const updatedCaseStudy = await updateCaseStudy(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -176,7 +176,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Find and delete case study
-    const caseStudyToDelete = await getCaseStudyByIdFromStorage(id);
+    const caseStudyToDelete = await getCaseStudyById(id);
     if (!caseStudyToDelete) {
       return NextResponse.json(
         { success: false, error: 'Case study not found' },
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove case study
-    const success = await deleteCaseStudyFromStorage(id);
+    const success = await deleteCaseStudy(id);
     if (!success) {
       return NextResponse.json(
         { success: false, error: 'Failed to delete case study' },

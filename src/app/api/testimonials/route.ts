@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTestimonialsFromStorage, saveTestimonialToStorage } from '@/lib/testimonial-storage';
+import { getTestimonials, addTestimonial } from '@/lib/storage-json-only';
 import { Testimonial } from '@/types';
 
 export async function GET() {
   try {
-    const testimonials = await getTestimonialsFromStorage();
+    const testimonials = await getTestimonials();
     
     return NextResponse.json({
       success: true,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    await saveTestimonialToStorage(testimonial);
+    await addTestimonial(testimonial);
     
     return NextResponse.json({
       success: true,

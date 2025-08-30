@@ -188,3 +188,121 @@ export async function getSettings() {
     address: 'Jakarta, Indonesia'
   };
 }
+
+// Additional helper functions for CMS API routes
+export async function getBlogPostById(id: string): Promise<BlogPost | undefined> {
+  await initializeData();
+  return (blogPosts || []).find(post => post.id === id);
+}
+
+export async function getCaseStudyById(id: string): Promise<CaseStudy | undefined> {
+  await initializeData();
+  return (caseStudies || []).find(cs => cs.id === id);
+}
+
+export async function getProductById(id: string): Promise<Product | undefined> {
+  await initializeData();
+  return (products || []).find(product => product.id === id);
+}
+
+// Write functions - Note: These will only update in-memory data
+// For actual persistence, you would need to implement file writing
+export async function addBlogPost(post: BlogPost): Promise<BlogPost> {
+  await initializeData();
+  blogPosts = [...(blogPosts || []), post];
+  return post;
+}
+
+export async function updateBlogPost(id: string, updateData: Partial<BlogPost>): Promise<BlogPost | null> {
+  await initializeData();
+  const index = (blogPosts || []).findIndex(post => post.id === id);
+  if (index === -1) return null;
+  
+  const updatedPost = { ...blogPosts[index], ...updateData };
+  blogPosts[index] = updatedPost;
+  return updatedPost;
+}
+
+export async function deleteBlogPost(id: string): Promise<boolean> {
+  await initializeData();
+  const index = (blogPosts || []).findIndex(post => post.id === id);
+  if (index === -1) return false;
+  
+  blogPosts.splice(index, 1);
+  return true;
+}
+
+export async function addCaseStudy(caseStudy: CaseStudy): Promise<CaseStudy> {
+  await initializeData();
+  caseStudies = [...(caseStudies || []), caseStudy];
+  return caseStudy;
+}
+
+export async function updateCaseStudy(id: string, updateData: Partial<CaseStudy>): Promise<CaseStudy | null> {
+  await initializeData();
+  const index = (caseStudies || []).findIndex(cs => cs.id === id);
+  if (index === -1) return null;
+  
+  const updatedCaseStudy = { ...caseStudies[index], ...updateData };
+  caseStudies[index] = updatedCaseStudy;
+  return updatedCaseStudy;
+}
+
+export async function deleteCaseStudy(id: string): Promise<boolean> {
+  await initializeData();
+  const index = (caseStudies || []).findIndex(cs => cs.id === id);
+  if (index === -1) return false;
+  
+  caseStudies.splice(index, 1);
+  return true;
+}
+
+export async function addProduct(product: Product): Promise<Product> {
+  await initializeData();
+  products = [...(products || []), product];
+  return product;
+}
+
+export async function updateProduct(id: string, updateData: Partial<Product>): Promise<Product | null> {
+  await initializeData();
+  const index = (products || []).findIndex(product => product.id === id);
+  if (index === -1) return null;
+  
+  const updatedProduct = { ...products[index], ...updateData };
+  products[index] = updatedProduct;
+  return updatedProduct;
+}
+
+export async function deleteProduct(id: string): Promise<boolean> {
+  await initializeData();
+  const index = (products || []).findIndex(product => product.id === id);
+  if (index === -1) return false;
+  
+  products.splice(index, 1);
+  return true;
+}
+
+export async function addTestimonial(testimonial: Testimonial): Promise<Testimonial> {
+  await initializeData();
+  testimonials = [...(testimonials || []), testimonial];
+  return testimonial;
+}
+
+export async function updateTestimonial(id: string, updateData: Partial<Testimonial>): Promise<Testimonial | null> {
+  await initializeData();
+  const index = (testimonials || []).findIndex(t => t.id === id);
+  if (index === -1) return null;
+  
+  const updatedTestimonial = { ...testimonials[index], ...updateData };
+  testimonials[index] = updatedTestimonial;
+  return updatedTestimonial;
+}
+
+export async function deleteTestimonial(id: string): Promise<boolean> {
+  await initializeData();
+  const index = (testimonials || []).findIndex(t => t.id === id);
+  if (index === -1) return false;
+  
+  testimonials.splice(index, 1);
+  return true;
+}

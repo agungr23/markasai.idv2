@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getCaseStudyByIdFromStorage,
-  updateCaseStudyInStorage,
-  deleteCaseStudyFromStorage
-} from '@/lib/case-study-storage';
+  getCaseStudyById,
+  updateCaseStudy,
+  deleteCaseStudy
+} from '@/lib/storage-json-only';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -13,7 +13,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const caseStudy = await getCaseStudyByIdFromStorage(id);
+    const caseStudy = await getCaseStudyById(id);
 
     if (!caseStudy) {
       return NextResponse.json(
@@ -41,7 +41,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    const updatedCaseStudy = await updateCaseStudyInStorage(id, body);
+    const updatedCaseStudy = await updateCaseStudy(id, body);
 
     if (!updatedCaseStudy) {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
 
-    const success = await deleteCaseStudyFromStorage(id);
+    const success = await deleteCaseStudy(id);
 
     if (!success) {
       return NextResponse.json(

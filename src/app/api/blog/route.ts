@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getBlogPostsFromStorage,
-  addBlogPostToStorage,
-  updateBlogPostInStorage,
-  deleteBlogPostFromStorage,
-  getBlogPostByIdFromStorage,
-  getBlogPostBySlugFromStorage
-} from '@/lib/blog-storage';
+import { getBlogPosts, getBlogPostBySlug, addBlogPost, updateBlogPost, deleteBlogPost, getBlogPostById } from '@/lib/storage-json-only';
 import { BlogPost } from '@/types';
 
-// GET - Get all blog posts
+// GET - Get all blog posts from JSON data
 export async function GET() {
   try {
-    const posts = await getBlogPostsFromStorage();
+    const posts = await getBlogPosts();
     return NextResponse.json({
       success: true,
       posts: posts
@@ -42,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingPost = await getBlogPostBySlugFromStorage(slug);
+    const existingPost = await getBlogPostBySlug(slug);
     if (existingPost) {
       return NextResponse.json(
         { success: false, error: 'Slug already exists' },
@@ -51,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new ID
-    const allPosts = await getBlogPostsFromStorage();
+    const allPosts = await getBlogPosts();
     const newId = allPosts.length > 0
       ? (Math.max(...allPosts.map(p => parseInt(p.id) || 0)) + 1).toString()
       : '1';
@@ -81,7 +74,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Add to blog posts data
-    await addBlogPostToStorage(newPost);
+    await addBlogPost(newPost);
 
     return NextResponse.json({
       success: true,
@@ -112,7 +105,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Find existing post
-    const existingPost = await getBlogPostByIdFromStorage(id);
+    const existingPost = await getBlogPostById(id);
     if (!existingPost) {
       return NextResponse.json(
         { success: false, error: 'Post not found' },
@@ -122,7 +115,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if new slug conflicts with other posts
     if (slug) {
-      const conflictingPost = await getBlogPostBySlugFromStorage(slug);
+      const conflictingPost = await getBlogPostBySlug(slug);
       if (conflictingPost && conflictingPost.id !== id) {
         return NextResponse.json(
           { success: false, error: 'Slug already exists' },
@@ -150,7 +143,7 @@ export async function PUT(request: NextRequest) {
       }
     };
 
-    const updatedPost = await updateBlogPostInStorage(id, updateData);
+    const updatedPost = await updateBlogPost(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -181,7 +174,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Find and delete post
-    const postToDelete = await getBlogPostByIdFromStorage(id);
+    const postToDelete = await getBlogPostById(id);
     if (!postToDelete) {
       return NextResponse.json(
         { success: false, error: 'Post not found' },
@@ -190,7 +183,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove post
-    const success = await deleteBlogPostFromStorage(id);
+    const success = await deleteBlogPost(id);
     if (!success) {
       return NextResponse.json(
         { success: false, error: 'Failed to delete post' },
