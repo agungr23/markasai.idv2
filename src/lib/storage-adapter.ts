@@ -50,84 +50,6 @@ class InMemoryStorage implements StorageAdapter {
   }
 }
 
-// JSON File Storage with memory fallback
-class JSONFileStorage implements StorageAdapter {
-  private memoryCache = new Map<string, unknown>();
-
-  private getFilePath(key: string): string {
-    const fileMap: Record<string, string> = {
-      'products': 'public/data/products.json',
-      'blog-posts': 'data/blog-posts.json',
-      'case-studies': 'data/case-studies.json',
-      'testimonials': 'data/testimonials.json',
-      'settings': 'data/settings.json'
-    };
-    return fileMap[key] || `data/${key}.json`;
-  }
-
-  async read<T>(key: string, defaultValue: T): Promise<T> {
-    // Check memory cache first
-    const cached = this.memoryCache.get(key) as T | undefined;
-    if (cached !== undefined) {
-      return cached;
-    }
-
-    try {
-      // Try to read from file system (only works in Node.js)
-      if (typeof window === 'undefined' && !isEdgeRuntime) {
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        const filePath = path.join(process.cwd(), this.getFilePath(key));
-        
-        const data = await fs.readFile(filePath, 'utf-8');
-        const parsed = JSON.parse(data) as T;
-        
-        // Cache in memory
-        this.memoryCache.set(key, parsed);
-        console.log(`📁 Data loaded from JSON: ${this.getFilePath(key)}`);
-        return parsed;
-      }
-    } catch (error) {
-      console.log(`JSON file for ${key} not found, using default value`);
-    }
-
-    // Fallback to default and cache it
-    this.memoryCache.set(key, defaultValue);
-    return defaultValue;
-  }
-
-  async write<T>(key: string, data: T): Promise<void> {
-    // Always update memory cache
-    this.memoryCache.set(key, data);
-
-    try {
-      // Try to write to file system (only works in Node.js)
-      if (typeof window === 'undefined' && !isEdgeRuntime) {
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        const filePath = path.join(process.cwd(), this.getFilePath(key));
-        
-        // Ensure directory exists
-        const dir = path.dirname(filePath);
-        await fs.mkdir(dir, { recursive: true });
-        
-        // Write JSON file with pretty formatting
-        await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
-        console.log(`💾 Data saved to JSON file: ${this.getFilePath(key)}`);
-      } else {
-        console.log(`💾 Data saved to memory: ${key} (file system not available)`);
-      }
-    } catch (error) {
-      console.warn(`⚠️ Could not save to JSON file for ${key}:`, error);
-      console.log(`💾 Data saved to memory only: ${key}`);
-    }
-  }
-
-  async exists(key: string): Promise<boolean> {
-    return this.memoryCache.has(key);
-  }
-}
-
 // Factory function to create appropriate storage adapter
 export async function createStorageAdapter(): Promise<StorageAdapter> {
   const env = getEnvironmentInfo();
@@ -137,14 +59,9 @@ export async function createStorageAdapter(): Promise<StorageAdapter> {
     logStorageInfo();
   }
   
-  // Use JSON file storage in development and production (with fallback to memory)
-  if (!isEdgeRuntime) {
-    console.log('🔧 Using JSON file storage with memory cache');
-    return new JSONFileStorage();
-  }
-  
-  // Use memory storage for Edge Runtime only
-  console.log('🔧 Using memory storage (Edge Runtime)');
+  // Always use memory storage to ensure Edge Runtime compatibility
+  // This prevents any Node.js module dependency issues during deployment
+  console.log('🔧 Using memory storage (universally compatible)');
   return new InMemoryStorage();
 }
 

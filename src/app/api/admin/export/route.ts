@@ -1,4 +1,4 @@
-// API endpoint for exporting and importing JSON data
+// API endpoint for exporting and importing JSON data (Edge Runtime compatible)
 import { NextRequest, NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/lib/storage-adapter';
 
