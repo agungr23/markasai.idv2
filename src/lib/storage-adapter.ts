@@ -2,26 +2,6 @@
 // No Node.js modules, pure memory-based storage for Edge Runtime
 import { getEnvironmentInfo, logStorageInfo } from './environment';
 
-// Runtime detection
-const isServerEnvironment = typeof window === 'undefined';
-const isEdgeRuntime = (() => {
-  try {
-    return (
-      isServerEnvironment &&
-      typeof globalThis !== 'undefined' &&
-      (
-        // Check for Edge Runtime indicators
-        'EdgeRuntime' in globalThis ||
-        (globalThis as { process?: { env?: { NEXT_RUNTIME?: string } } }).process?.env?.NEXT_RUNTIME === 'edge' ||
-        // Check if we're in a serverless environment without file system access
-        ('process' in globalThis && !(globalThis as { process?: { versions?: { node?: string } } }).process?.versions?.node)
-      )
-    );
-  } catch {
-    return false;
-  }
-})();
-
 export interface StorageAdapter {
   read<T>(key: string, defaultValue: T): Promise<T>;
   write<T>(key: string, data: T): Promise<void>;
