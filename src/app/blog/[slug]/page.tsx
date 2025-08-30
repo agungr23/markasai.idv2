@@ -1,78 +1,62 @@
-import { Metadata } from 'next';
+'use client';
+
 import { notFound } from 'next/navigation';
-import { getBlogPostsFromStorage, getBlogPostBySlugFromStorage } from '@/lib/blog-storage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, ArrowLeft, Share2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { getBlogPostBySlug, getBlogPosts } from '@/lib/storage-json-only';
+import { BlogPost } from '@/types';
 
-interface BlogPostPageProps {
-  params: Promise<{ slug: string }>;
-}
+// Hapus generateStaticParams dan generateMetadata untuk menghindari build timeout
+// Gunakan client-side rendering dengan JSON data langsung
 
-export async function generateStaticParams() {
-  try {
-    const blogPosts = await getBlogPostsFromStorage();
-    // Only generate static params untuk posts utama saja
-    const publishedPosts = blogPosts
-      .filter(post => post.status === 'published' && post.slug && post.slug.trim() !== '')
-      .slice(0, 3); // Kurangi menjadi hanya 3 untuk menghindari timeout
-    
-    return publishedPosts.map((post) => ({
-      slug: post.slug,
-    }));
-  } catch (error) {
-    console.error('Error generating static params for blog posts:', error);
-    return []; // Return empty array jika ada error
+export default function BlogPostPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (slug) {
+      setLoading(true);
+      
+      // Load data dari JSON langsung - sangat cepat
+      const foundPost = getBlogPostBySlug(slug);
+      setPost(foundPost || null);
+      
+      if (foundPost) {
+        // Get related posts
+        const allPosts = getBlogPosts();
+        const related = allPosts
+          .filter((p) => p.id !== foundPost.id && p.tags.some(tag => foundPost.tags.includes(tag)))
+          .slice(0, 3);
+        setRelatedPosts(related);
+      }
+      
+      setLoading(false);
+    }
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading artikel...</p>
+        </div>
+      </div>
+    );
   }
-}
 
-export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getBlogPostBySlugFromStorage(slug);
-
-  if (!post || post.status !== 'published') {
-    return {
-      title: 'Artikel Tidak Ditemukan',
-    };
-  }
-
-  return {
-    title: post.seo.title,
-    description: post.seo.description,
-    keywords: post.seo.keywords,
-    openGraph: {
-      title: post.seo.title,
-      description: post.seo.description,
-      images: [post.cover],
-      type: 'article',
-      publishedTime: post.publishedAt,
-      authors: [post.author.name],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.seo.title,
-      description: post.seo.description,
-      images: [post.cover],
-    },
-  };
-}
-
-export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
-  const post = await getBlogPostBySlugFromStorage(slug);
-
-  if (!post || post.status !== 'published') {
+  if (!post) {
     notFound();
   }
-
-  // Get related posts (excluding current post, only published)
-  const allPosts = await getBlogPostsFromStorage();
-  const relatedPosts = allPosts
-    .filter((p) => p.id !== post.id && p.status === 'published' && p.tags.some(tag => post.tags.includes(tag)))
-    .slice(0, 3);
 
   return (
     <>

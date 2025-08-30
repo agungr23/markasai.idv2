@@ -9,34 +9,17 @@ import { BlogPost } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, User, ArrowRight } from 'lucide-react';
+import { getBlogPosts } from '@/lib/storage-json-only';
 
 export default function BlogPage() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchBlogPosts = async () => {
-      try {
-        const response = await fetch('/api/blog');
-        const data = await response.json();
-
-        if (data.success) {
-          // Filter only published posts for public view
-          const publishedPosts = data.posts.filter((post: BlogPost) => post.status === 'published');
-          setBlogPosts(publishedPosts);
-        } else {
-          setError('Failed to fetch blog posts');
-        }
-      } catch (err) {
-        setError('Error loading blog posts');
-        console.error('Error fetching blog posts:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBlogPosts();
+    // Load data dari JSON langsung - sangat cepat, no API call needed
+    const posts = getBlogPosts();
+    setBlogPosts(posts);
+    setLoading(false);
   }, []);
 
   const categories = [
@@ -53,19 +36,6 @@ export default function BlogPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading blog posts...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
         </div>
       </div>
     );
