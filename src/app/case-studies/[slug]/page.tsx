@@ -11,6 +11,7 @@ import { Calendar, Building, ArrowLeft, TrendingUp, Users, Clock } from 'lucide-
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { getCaseStudyBySlug } from '@/lib/storage-json-only';
+import { CaseStudy } from '@/types';
 
 // Hapus generateStaticParams dan generateMetadata untuk menghindari build timeout
 // export async function generateStaticParams() { ... }
