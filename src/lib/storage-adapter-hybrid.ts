@@ -1,5 +1,4 @@
-// Universal storage adapter - JSON file dengan fallback memory untuk Edge Runtime
-// Menggunakan JSON file ketika memungkinkan, memory untuk kompatibilitas
+// Hybrid storage adapter - JSON file ketika memungkinkan, memory untuk Edge Runtime
 import { getEnvironmentInfo, logStorageInfo } from './environment';
 
 export interface StorageAdapter {
@@ -31,10 +30,9 @@ class InMemoryStorage implements StorageAdapter {
   }
 }
 
-// JSON file storage dengan memory fallback
-class HybridStorage implements StorageAdapter {
+// JSON file storage untuk environment yang mendukung
+class JSONFileStorage implements StorageAdapter {
   private memoryCache = new Map<string, unknown>();
-  private fileSystemAvailable: boolean | null = null;
 
   private getFilePath(key: string): string {
     const fileMap: Record<string, string> = {
@@ -47,35 +45,20 @@ class HybridStorage implements StorageAdapter {
     return fileMap[key] || `data/${key}.json`;
   }
 
-  private async checkFileSystemAccess(): Promise<boolean> {
-    if (this.fileSystemAvailable !== null) {
-      return this.fileSystemAvailable;
-    }
-
+  private async canUseFileSystem(): Promise<boolean> {
     try {
-      // Cek apakah environment mendukung file system
-      if (typeof window !== 'undefined') {
-        this.fileSystemAvailable = false;
-        return false;
-      }
+      // Cek apakah kita bisa akses file system
+      if (typeof window !== 'undefined') return false; // Browser
+      if (typeof process === 'undefined') return false; // Edge Runtime
       
-      // Cek apakah process tersedia (tidak di Edge Runtime)
-      if (typeof process === 'undefined') {
-        this.fileSystemAvailable = false;
-        return false;
-      }
-
-      // Test dengan dynamic import untuk menghindari build error
+      // Test akses file system dengan menggunakan dynamic import
       const fs = await import('fs/promises');
       const path = await import('path');
       
-      // Test akses file yang pasti ada
+      // Test baca file yang pasti ada
       await fs.access(path.join(process.cwd(), 'package.json'));
-      
-      this.fileSystemAvailable = true;
       return true;
     } catch {
-      this.fileSystemAvailable = false;
       return false;
     }
   }
@@ -88,7 +71,7 @@ class HybridStorage implements StorageAdapter {
     }
 
     try {
-      if (await this.checkFileSystemAccess()) {
+      if (await this.canUseFileSystem()) {
         const fs = await import('fs/promises');
         const path = await import('path');
         const filePath = path.join(process.cwd(), this.getFilePath(key));
@@ -96,7 +79,7 @@ class HybridStorage implements StorageAdapter {
         const data = await fs.readFile(filePath, 'utf-8');
         const parsed = JSON.parse(data) as T;
         
-        // Cache ke memory untuk performa
+        // Cache ke memory
         this.memoryCache.set(key, parsed);
         console.log(`📁 Data dimuat dari JSON: ${this.getFilePath(key)}`);
         return parsed;
@@ -115,7 +98,7 @@ class HybridStorage implements StorageAdapter {
     this.memoryCache.set(key, data);
 
     try {
-      if (await this.checkFileSystemAccess()) {
+      if (await this.canUseFileSystem()) {
         const fs = await import('fs/promises');
         const path = await import('path');
         const filePath = path.join(process.cwd(), this.getFilePath(key));
@@ -145,14 +128,31 @@ class HybridStorage implements StorageAdapter {
 export async function createStorageAdapter(): Promise<StorageAdapter> {
   const env = getEnvironmentInfo();
   
-  // Log konfigurasi storage di development
   if (!env.isProduction) {
     logStorageInfo();
   }
   
-  // Coba gunakan hybrid storage yang mendukung JSON file
-  console.log('🔧 Menggunakan hybrid storage (JSON file + memory fallback)');
-  return new HybridStorage();
+  try {
+    // Coba gunakan JSON file storage dulu
+    const jsonStorage = new JSONFileStorage();
+    
+    // Test apakah bisa baca/tulis file
+    const testKey = '__test__';
+    const testValue = { test: true, timestamp: Date.now() };
+    
+    await jsonStorage.write(testKey, testValue);
+    const result = await jsonStorage.read(testKey, { test: false });
+    
+    if (result.test === true) {
+      console.log('🔧 Menggunakan JSON file storage dengan cache memory');
+      return jsonStorage;
+    }
+  } catch (error) {
+    console.log('File system tidak tersedia, menggunakan memory storage');
+  }
+  
+  console.log('🔧 Menggunakan memory storage (kompatibel universal)');
+  return new InMemoryStorage();
 }
 
 // Singleton instance
