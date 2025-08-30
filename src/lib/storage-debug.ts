@@ -1,4 +1,5 @@
 // Storage health check and debugging utilities
+// Safe for Edge Runtime
 import { getStorageAdapter } from './storage-adapter';
 import { getEnvironmentInfo } from './environment';
 

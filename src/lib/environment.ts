@@ -1,9 +1,31 @@
 // Environment detector and configuration helper
+// Safe for Edge Runtime with proper type casting
 export function getEnvironmentInfo() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isVercel = process.env.VERCEL === '1';
-  const isNetlify = process.env.NETLIFY === 'true';
+  // Safe check for process object using type casting
+  const hasProcess = (() => {
+    try {
+      return (
+        typeof globalThis !== 'undefined' && 
+        'process' in globalThis &&
+        typeof (globalThis as any).process !== 'undefined'
+      );
+    } catch {
+      return false;
+    }
+  })();
+  
+  const isProduction = hasProcess ? (globalThis as any).process.env.NODE_ENV === 'production' : false;
+  const isVercel = hasProcess ? (globalThis as any).process.env.VERCEL === '1' : false;
+  const isNetlify = hasProcess ? (globalThis as any).process.env.NETLIFY === 'true' : false;
   const isServer = typeof window === 'undefined';
+  
+  // Runtime detection with fallback
+  let runtime = 'nodejs';
+  if (hasProcess) {
+    runtime = (globalThis as any).process.env.NEXT_RUNTIME || 'nodejs';
+  } else if (typeof globalThis !== 'undefined' && 'EdgeRuntime' in globalThis) {
+    runtime = 'edge';
+  }
   
   return {
     isProduction,
@@ -11,7 +33,8 @@ export function getEnvironmentInfo() {
     isNetlify,
     isServer,
     isServerless: isVercel || isNetlify,
-    runtime: process.env.NEXT_RUNTIME || 'nodejs'
+    runtime,
+    hasProcess
   };
 }
 

@@ -1,9 +1,37 @@
 // Universal storage adapter that works in both development and production
-import fs from 'fs';
-import path from 'path';
+// Safe for Edge Runtime with proper type handling
 import { getEnvironmentInfo, logStorageInfo } from './environment';
 
-const { promises: fsPromises } = fs;
+// Conditional import for Node.js modules using dynamic imports
+let fs: any = null;
+let path: any = null;
+let fsPromises: any = null;
+
+// Check if we're in Node.js environment with type safety
+const isNodeEnvironment = (() => {
+  try {
+    return (
+      typeof globalThis !== 'undefined' && 
+      'process' in globalThis &&
+      (globalThis as any).process?.versions?.node
+    );
+  } catch {
+    return false;
+  }
+})();
+
+// Only import fs and path in Node.js runtime
+if (isNodeEnvironment) {
+  try {
+    // Use eval to avoid static analysis
+    const nodeRequire = eval('require');
+    fs = nodeRequire('fs');
+    path = nodeRequire('path');
+    fsPromises = fs.promises;
+  } catch (error) {
+    console.warn('File system modules not available in this runtime');
+  }
+}
 
 export interface StorageAdapter {
   read<T>(key: string, defaultValue: T): Promise<T>;
@@ -12,9 +40,19 @@ export interface StorageAdapter {
 }
 
 class FileSystemStorage implements StorageAdapter {
-  private dataDir = path.join(process.cwd(), 'data');
+  private dataDir: string;
+
+  constructor() {
+    if (!path || !fs) {
+      throw new Error('File system not available in this runtime');
+    }
+    // Safe process.cwd() call with type casting
+    const processCwd = isNodeEnvironment ? (globalThis as any).process.cwd() : '/tmp';
+    this.dataDir = path.join(processCwd, 'data');
+  }
 
   private async ensureDataDir(): Promise<void> {
+    if (!fsPromises) throw new Error('File system not available');
     try {
       await fsPromises.access(this.dataDir);
     } catch {
@@ -23,6 +61,7 @@ class FileSystemStorage implements StorageAdapter {
   }
 
   private getFilePath(key: string): string {
+    if (!path) throw new Error('Path module not available');
     return path.join(this.dataDir, `${key}.json`);
   }
 
@@ -86,36 +125,62 @@ class InMemoryStorage implements StorageAdapter {
 }
 
 class HybridStorage implements StorageAdapter {
-  private fileStorage = new FileSystemStorage();
+  private fileStorage: FileSystemStorage | null = null;
   private memoryStorage = new InMemoryStorage();
+
+  constructor() {
+    // Only initialize file storage if available
+    if (fs && path && fsPromises) {
+      try {
+        this.fileStorage = new FileSystemStorage();
+      } catch (error) {
+        console.warn('File storage not available, using memory only');
+      }
+    }
+  }
 
   async read<T>(key: string, defaultValue: T): Promise<T> {
     try {
-      // Try file storage first
-      return await this.fileStorage.read(key, defaultValue);
+      // Try file storage first if available
+      if (this.fileStorage) {
+        return await this.fileStorage.read(key, defaultValue);
+      }
     } catch (error) {
       console.log(`File storage failed for ${key}, using memory storage`);
-      return await this.memoryStorage.read(key, defaultValue);
     }
+    
+    // Fallback to memory storage
+    return await this.memoryStorage.read(key, defaultValue);
   }
 
   async write<T>(key: string, data: T): Promise<void> {
     // Always write to memory first for fast access
     await this.memoryStorage.write(key, data);
     
-    try {
-      // Try to persist to file system
-      await this.fileStorage.write(key, data);
-    } catch (error) {
-      console.warn(`Could not persist ${key} to file system:`, error);
-      // Continue with memory-only storage
+    // Try to persist to file system if available
+    if (this.fileStorage) {
+      try {
+        await this.fileStorage.write(key, data);
+      } catch (error) {
+        console.warn(`Could not persist ${key} to file system:`, error);
+        // Continue with memory-only storage
+      }
     }
   }
 
   async exists(key: string): Promise<boolean> {
-    const fileExists = await this.fileStorage.exists(key);
     const memoryExists = await this.memoryStorage.exists(key);
-    return fileExists || memoryExists;
+    
+    if (this.fileStorage) {
+      try {
+        const fileExists = await this.fileStorage.exists(key);
+        return fileExists || memoryExists;
+      } catch {
+        return memoryExists;
+      }
+    }
+    
+    return memoryExists;
   }
 }
 
@@ -128,13 +193,22 @@ export function createStorageAdapter(): StorageAdapter {
     logStorageInfo();
   }
   
-  if (env.isProduction && env.isServerless) {
-    // Use memory storage for serverless environments
-    console.log('🔧 Using memory storage for serverless environment');
+  // Check if we're in Edge Runtime or file system is not available
+  const isEdgeRuntime = env.runtime === 'edge' || !fs || !path;
+  
+  if (env.isProduction && (env.isServerless || isEdgeRuntime)) {
+    // Use memory storage for serverless/edge environments
+    console.log('🔧 Using memory storage for serverless/edge environment');
     return new InMemoryStorage();
   }
   
-  // Use hybrid storage for development and self-hosted production
+  if (isEdgeRuntime) {
+    // Use memory storage if file system not available
+    console.log('🔧 Using memory storage (file system not available)');
+    return new InMemoryStorage();
+  }
+  
+  // Use hybrid storage for Node.js environments
   console.log('🔧 Using hybrid storage (file + memory fallback)');
   return new HybridStorage();
 }
