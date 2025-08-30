@@ -14,6 +14,7 @@ export interface Product {
   faq: FAQ[];
   seo: SEO;
   isActive?: boolean;
+  isFeatured?: boolean;
 }
 
 export interface PriceTier {

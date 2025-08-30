@@ -153,7 +153,7 @@ export async function getBlogPostsByTag(tag: string): Promise<BlogPost[]> {
 // Featured content with async data loading
 export async function getFeaturedProducts(): Promise<Product[]> {
   await initializeData();
-  return (products || []).filter(product => product.isFeatured || product.featured).slice(0, 3);
+  return (products || []).filter(product => product.isFeatured === true).slice(0, 3);
 }
 
 export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
