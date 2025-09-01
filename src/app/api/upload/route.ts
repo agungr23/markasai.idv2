@@ -1,35 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadMediaToBlob } from '@/lib/vercel-blob-storage';
 import { getEnvironmentInfo } from '@/lib/environment';
+import { broadcastMediaEvent } from '../media/events/route';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Upload API called');
-    
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
       console.log('❌ No file in request');
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'No file uploaded',
         details: 'File not found in form data'
       }, { status: 400 });
     }
 
     console.log('📁 File received:', file.name, 'size:', file.size, 'type:', file.type);
-    
+
     const env = getEnvironmentInfo();
     console.log('🌍 Environment:', {
       isProduction: env.isProduction,
       isVercel: env.isVercel,
       isServerless: env.isServerless
     });
-    
+
     // Always use Vercel Blob storage
     console.log('🟢 Using Vercel Blob storage');
     try {
       const mediaFile = await uploadMediaToBlob(file);
+
+      // Broadcast real-time event
+      broadcastMediaEvent({
+        type: 'upload',
+        data: {
+          file: mediaFile,
+          message: 'File uploaded successfully'
+        }
+      });
+
       return NextResponse.json({
         success: true,
         file: mediaFile,

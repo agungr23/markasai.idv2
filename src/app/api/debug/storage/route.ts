@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
             runtime: env.runtime
           }
         };
-        
+
         return NextResponse.json({
           success: true,
           health

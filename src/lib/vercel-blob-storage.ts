@@ -48,7 +48,7 @@ function hasBlobToken() {
   try {
     const hasProcess = typeof globalThis !== 'undefined' && 'process' in globalThis;
     if (!hasProcess) return false;
-    
+
     const processEnv = (globalThis as { process: { env: Record<string, string | undefined> } }).process.env;
     const hasToken = !!processEnv.BLOB_READ_WRITE_TOKEN;
     console.log('🔑 Blob token check:', hasToken ? 'Token found' : 'Token missing');
@@ -110,7 +110,7 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
     if (key === STORAGE_KEYS.MEDIA_FILES) {
       return [] as T[]; // Return empty for media files when blob unavailable
     }
-    
+
     // For other data types, use JSON storage
     switch (key) {
       case STORAGE_KEYS.BLOG_POSTS:
@@ -128,41 +128,41 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
 
   try {
     console.log('🔍 Loading from Blob:', key);
-    
+
     // List all blobs and find ones that match our key pattern
     const { blobs } = await list();
     console.log('📋 Total blobs found:', blobs.length);
     console.log('🔎 Looking for blobs matching:', key);
-    
+
     // Enhanced pattern matching to handle duplicate files
     const matchingBlobs = blobs.filter(blob => {
       const pathname = blob.pathname;
-      
+
       // Exact match
       if (pathname === key) {
         console.log('✅ Exact match found:', pathname);
         return true;
       }
-      
+
       // Pattern match for versioned files (e.g., data/media-files-1234567890.json)
       const baseKey = key.replace('.json', '');
       if (pathname.startsWith(baseKey + '-') && pathname.endsWith('.json')) {
         console.log('✅ Pattern match found:', pathname);
         return true;
       }
-      
+
       // Legacy pattern match
       if (pathname.startsWith(key.replace('.json', '-'))) {
         console.log('✅ Legacy pattern match found:', pathname);
         return true;
       }
-      
+
       return false;
     });
-    
+
     console.log('🎯 Matching blobs found:', matchingBlobs.length);
     matchingBlobs.forEach(blob => console.log('  📄', blob.pathname));
-    
+
     if (matchingBlobs.length === 0) {
       console.log('📭 No matching blobs found for:', key);
       return fallback;
@@ -171,9 +171,9 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
     // For duplicate files, test each one and pick the one with most data
     let bestBlob = null;
     let maxItems = -1;
-    
+
     console.log('🔍 Testing each blob to find the one with most data...');
-    
+
     for (const blob of matchingBlobs) {
       try {
         const response = await fetch(blob.url);
@@ -181,7 +181,7 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
           const data = await response.json();
           const itemCount = Array.isArray(data) ? data.length : 0;
           console.log(`  📄 ${blob.pathname}: ${itemCount} items`);
-          
+
           if (itemCount > maxItems) {
             maxItems = itemCount;
             bestBlob = blob;
@@ -194,19 +194,19 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
         console.log(`  ❌ ${blob.pathname}: Error - ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
-    
+
     if (!bestBlob) {
       console.log('❌ No accessible blobs found');
       return fallback;
     }
-    
+
     console.log(`🏆 Using best blob: ${bestBlob.pathname} with ${maxItems} items`);
-    
+
     const response = await fetch(bestBlob.url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     console.log('✅ Loaded from Blob:', key, '- items:', Array.isArray(data) ? data.length : 'invalid');
     return Array.isArray(data) ? data : fallback;
@@ -235,9 +235,9 @@ export async function addBlogPost(post: BlogPost): Promise<BlogPost> {
 export async function updateBlogPost(id: string, updateData: Partial<BlogPost>): Promise<BlogPost | null> {
   const posts = await getBlogPosts();
   const index = posts.findIndex(p => p.id === id);
-  
+
   if (index === -1) return null;
-  
+
   const updatedPost = { ...posts[index], ...updateData };
   posts[index] = updatedPost;
   await saveBlogPosts(posts);
@@ -247,9 +247,9 @@ export async function updateBlogPost(id: string, updateData: Partial<BlogPost>):
 export async function deleteBlogPost(id: string): Promise<boolean> {
   const posts = await getBlogPosts();
   const filteredPosts = posts.filter(p => p.id !== id);
-  
+
   if (filteredPosts.length === posts.length) return false;
-  
+
   await saveBlogPosts(filteredPosts);
   return true;
 }
@@ -273,9 +273,9 @@ export async function addCaseStudy(caseStudy: CaseStudy): Promise<CaseStudy> {
 export async function updateCaseStudy(id: string, updateData: Partial<CaseStudy>): Promise<CaseStudy | null> {
   const caseStudies = await getCaseStudies();
   const index = caseStudies.findIndex(cs => cs.id === id);
-  
+
   if (index === -1) return null;
-  
+
   const updated = { ...caseStudies[index], ...updateData };
   caseStudies[index] = updated;
   await saveCaseStudies(caseStudies);
@@ -285,9 +285,9 @@ export async function updateCaseStudy(id: string, updateData: Partial<CaseStudy>
 export async function deleteCaseStudy(id: string): Promise<boolean> {
   const caseStudies = await getCaseStudies();
   const filtered = caseStudies.filter(cs => cs.id !== id);
-  
+
   if (filtered.length === caseStudies.length) return false;
-  
+
   await saveCaseStudies(filtered);
   return true;
 }
@@ -312,7 +312,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
   const files = await getMediaFiles();
   const deletedFiles: string[] = [];
   const errors: string[] = [];
-  
+
   // Filter files and collect URLs for deletion
   const filesToDelete: MediaFile[] = [];
   const filtered = files.filter(file => {
@@ -323,7 +323,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
     }
     return true;
   });
-  
+
   // Delete actual blob files if blob is available
   if (canUseBlob() && del) {
     for (const file of filesToDelete) {
@@ -339,9 +339,9 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
       }
     }
   }
-  
+
   await saveMediaFiles(filtered);
-  
+
   return { deletedFiles, errors };
 }
 
@@ -368,7 +368,7 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
   if (!canUseBlob()) {
     throw new Error('Vercel Blob storage tidak tersedia. Pastikan BLOB_READ_WRITE_TOKEN sudah dikonfigurasi.');
   }
-  
+
   if (!put) {
     throw new Error('@vercel/blob module tidak tersedia. Pastikan dependency sudah terinstall.');
   }
@@ -377,9 +377,9 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
     // Upload file ke Vercel Blob
     const timestamp = Date.now();
     const filename = `${timestamp}_${file.name}`;
-    
+
     console.log(`🚀 Uploading to Vercel Blob: ${filename}`);
-    
+
     const blob = await put(`media/${filename}`, file, {
       access: 'public',
       contentType: file.type
@@ -407,39 +407,39 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
     return mediaFile;
   } catch (error) {
     console.error('❌ Vercel Blob upload error:', error);
-    
+
     if (error instanceof Error) {
       const errorMessage = error.message.toLowerCase();
-      
+
       if (errorMessage.includes('unauthorized') || errorMessage.includes('401')) {
         throw new Error('BLOB_READ_WRITE_TOKEN tidak valid atau expired. Silakan generate token baru di Vercel Dashboard → Storage → Blob → Settings.');
       }
-      
+
       if (errorMessage.includes('forbidden') || errorMessage.includes('403')) {
         throw new Error('Akses ke Blob storage ditolak. Pastikan BLOB_READ_WRITE_TOKEN memiliki permission write yang benar.');
       }
-      
+
       if (errorMessage.includes('not found') || errorMessage.includes('404')) {
         throw new Error('Blob storage tidak ditemukan. Pastikan Blob database sudah dibuat di Vercel Dashboard → Storage.');
       }
-      
+
       if (errorMessage.includes('too large') || errorMessage.includes('413')) {
         throw new Error('File terlalu besar. Maksimal ukuran file adalah 50MB. Silakan compress file terlebih dahulu.');
       }
-      
+
       if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
         throw new Error('Quota Blob storage terlampaui. Upgrade plan Vercel atau hapus file lama untuk membuat ruang.');
       }
-      
+
       if (errorMessage.includes('timeout')) {
         throw new Error('Upload timeout. Coba upload file yang lebih kecil atau check koneksi internet.');
       }
-      
+
       if (errorMessage.includes('blob_read_write_token')) {
         throw new Error('BLOB_READ_WRITE_TOKEN belum diset. Silakan set environment variable di Vercel Dashboard → Settings → Environment Variables.');
       }
     }
-    
+
     // Generic error with helpful message
     throw new Error(`Vercel Blob upload gagal: ${error instanceof Error ? error.message : 'Unknown error'}. Silakan check BLOB_READ_WRITE_TOKEN di environment variables.`);
   }

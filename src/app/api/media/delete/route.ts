@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as blobStorage from '@/lib/vercel-blob-storage';
+import { broadcastMediaEvent } from '../events/route';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -12,7 +13,17 @@ export async function DELETE(request: NextRequest) {
     console.log('🟢 Deleting media from Vercel Blob storage');
     const result = await blobStorage.deleteMediaFiles(fileIds);
 
-    return NextResponse.json({ 
+    // Broadcast real-time event
+    broadcastMediaEvent({
+      type: 'delete',
+      data: {
+        deletedFiles: result.deletedFiles,
+        errors: result.errors,
+        message: `${result.deletedFiles.length} file(s) deleted`
+      }
+    });
+
+    return NextResponse.json({
       success: true,
       deletedFiles: result.deletedFiles,
       errors: result.errors,

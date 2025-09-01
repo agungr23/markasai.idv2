@@ -6,18 +6,18 @@ const nextConfig: NextConfig = {
     // Enable optimizations
     optimizePackageImports: ['lucide-react'],
   },
-  
+
   // Build configuration untuk menghindari timeout
   generateBuildId: async () => {
     return 'markasai-build-' + Date.now();
   },
-  
+
   // Static generation configuration dengan timeout lebih panjang
   typescript: {
     // Ignore build errors untuk development/build speed
     ignoreBuildErrors: false,
   },
-  
+
   // Konfigurasi untuk mengatasi build timeout
   onDemandEntries: {
     // Periode in ms sebelum entry disposed
@@ -25,25 +25,25 @@ const nextConfig: NextConfig = {
     // Nomor pages yang harus disimpan secara bersamaan
     pagesBufferLength: 2,
   },
-  
+
   // Ensure proper image optimization for Vercel
   images: {
     domains: [],
     unoptimized: false, // Enable optimization on Vercel
   },
-  
+
   // Output configuration - Vercel deployment (serverless)
   output: undefined, // Default serverless for Vercel
   trailingSlash: false,
-  
+
   // Enable compression
   compress: true,
-  
+
   // Environment-specific configurations
   env: {
     STORAGE_TYPE: process.env.NODE_ENV === 'production' ? 'hybrid' : 'file',
   },
-  
+
   // Headers for better performance
   async headers() {
     return [

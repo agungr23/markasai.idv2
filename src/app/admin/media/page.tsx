@@ -52,19 +52,19 @@ export default function AdminMediaPage() {
     setIsRefreshing(true);
     try {
       console.log('🚀 Fetching media files from API...');
-      
+
       // Add cache buster to ensure fresh data
       const timestamp = Date.now();
       const response = await fetch(`/api/media?t=${timestamp}`);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('📊 Raw API response:', data);
         const files = data.files || [];
-        
+
         // Clear existing state first to prevent stale data
         setUploadedFiles([]);
-        
+
         // Then set new data
         setTimeout(() => {
           setUploadedFiles(files);
@@ -91,12 +91,12 @@ export default function AdminMediaPage() {
 
     try {
       const uploadedResults: MediaFile[] = [];
-      
+
       // Upload files one by one
       for (const file of Array.from(fileList)) {
         const formData = new FormData();
         formData.append('file', file); // Use 'file' to match API expectation
-        
+
         console.log('Uploading file:', file.name, 'size:', file.size);
 
         const response = await fetch('/api/upload', {
@@ -105,7 +105,7 @@ export default function AdminMediaPage() {
         });
 
         const result = await response.json();
-        
+
         if (!response.ok) {
           console.error('Upload failed for', file.name, ':', result);
           throw new Error(result.error || `Upload failed for ${file.name}`);
@@ -122,7 +122,7 @@ export default function AdminMediaPage() {
       // Add uploaded files to state AND reload from server to ensure consistency
       if (uploadedResults.length > 0) {
         console.log('✅ Upload successful! Reloading media list to ensure consistency...');
-        
+
         // Reload fresh data from server instead of just updating state
         await loadUploadedFiles();
 
@@ -192,7 +192,7 @@ export default function AdminMediaPage() {
   const deleteFiles = async (fileIds: string[]) => {
     try {
       console.log('🗑️ Deleting files:', fileIds);
-      
+
       // Delete files from server
       const response = await fetch('/api/media/delete', {
         method: 'DELETE',
@@ -247,7 +247,7 @@ export default function AdminMediaPage() {
             Kelola semua file media untuk konten MarkasAI ({uploadedFiles.length} files)
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <input
             type="file"
@@ -267,9 +267,8 @@ export default function AdminMediaPage() {
       </div>
 
       {/* Upload Area */}
-      <Card className={`border-2 border-dashed transition-colors ${
-        dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
-      }`}>
+      <Card className={`border-2 border-dashed transition-colors ${dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
+        }`}>
         <CardContent
           className="p-8 text-center cursor-pointer"
           onDragEnter={handleDrag}
@@ -333,7 +332,7 @@ export default function AdminMediaPage() {
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -343,12 +342,12 @@ export default function AdminMediaPage() {
               >
                 {isRefreshing ? '🔄 Refreshing...' : '🔄 Refresh'}
               </Button>
-              
+
               <Button variant="outline" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
-              
+
               <div className="flex border rounded-lg">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -369,7 +368,7 @@ export default function AdminMediaPage() {
               </div>
             </div>
           </div>
-          
+
           {selectedFiles.length > 0 && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
               <span className="text-sm text-blue-800">
@@ -399,11 +398,10 @@ export default function AdminMediaPage() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {filteredFiles.map((file) => (
-            <Card 
-              key={file.id} 
-              className={`cursor-pointer hover:shadow-lg transition-all ${
-                selectedFiles.includes(file.id) ? 'ring-2 ring-primary' : ''
-              }`}
+            <Card
+              key={file.id}
+              className={`cursor-pointer hover:shadow-lg transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-primary' : ''
+                }`}
               onClick={() => toggleFileSelection(file.id)}
             >
               <CardContent className="p-3">
@@ -428,7 +426,7 @@ export default function AdminMediaPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* File Info */}
                   <div>
                     <div className="flex items-center gap-1 mb-1">
@@ -446,7 +444,7 @@ export default function AdminMediaPage() {
                       <p className="text-xs text-gray-500">{file.dimensions}</p>
                     )}
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex gap-1">
                     <Button
@@ -486,11 +484,10 @@ export default function AdminMediaPage() {
           <CardContent className="p-0">
             <div className="divide-y">
               {filteredFiles.map((file) => (
-                <div 
+                <div
                   key={file.id}
-                  className={`p-4 flex items-center gap-4 hover:bg-gray-50 cursor-pointer ${
-                    selectedFiles.includes(file.id) ? 'bg-blue-50' : ''
-                  }`}
+                  className={`p-4 flex items-center gap-4 hover:bg-gray-50 cursor-pointer ${selectedFiles.includes(file.id) ? 'bg-blue-50' : ''
+                    }`}
                   onClick={() => toggleFileSelection(file.id)}
                 >
                   {/* Thumbnail */}
@@ -513,7 +510,7 @@ export default function AdminMediaPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* File Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -528,7 +525,7 @@ export default function AdminMediaPage() {
                       {file.size} • {file.dimensions} • {file.uploadedAt}
                     </p>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex gap-2">
                     <Button

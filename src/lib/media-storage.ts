@@ -14,23 +14,23 @@ function canUseFileSystem() {
     if (typeof window !== 'undefined') {
       return false; // Client-side
     }
-    
+
     // Check if we're in development
     if (!isDevelopment) {
       return false; // Production
     }
-    
+
     // Try to access require function
     if (typeof require === 'undefined') {
       return false; // No require available
     }
-    
+
     // Try to require fs and path modules
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require('fs');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const path = require('path');
-    
+
     return !!(fs && path);
   } catch (error) {
     console.log('⚠️ File system not available:', error);
@@ -88,11 +88,11 @@ export async function getMediaFiles(): Promise<MediaFile[]> {
       // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const path = require('path');
       const filePath = path.join(process.cwd(), 'data/media.json');
-      
+
       if (fs.existsSync(filePath)) {
         const data = fs.readFileSync(filePath, 'utf8');
         const parsedData = JSON.parse(data);
-        
+
         if (Array.isArray(parsedData)) {
           // Validate that physical files exist
           const validFiles = parsedData.filter(file => {
@@ -103,18 +103,18 @@ export async function getMediaFiles(): Promise<MediaFile[]> {
             }
             return exists;
           });
-          
+
           // If we filtered out any files, update the JSON
           if (validFiles.length !== parsedData.length) {
             console.log(`🔄 Cleaning up media.json: ${parsedData.length} -> ${validFiles.length} files`);
             fs.writeFileSync(filePath, JSON.stringify(validFiles, null, 2));
           }
-          
+
           console.log('📱 Loaded', validFiles.length, 'validated media files from JSON');
           return validFiles;
         }
       }
-      
+
       console.log('⚠️ media.json file not found or invalid, returning empty array');
       return [];
     } catch (error) {
@@ -138,7 +138,7 @@ export async function addMediaFile(file: MediaFile): Promise<MediaFile> {
       // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const path = require('path');
       const filePath = path.join(process.cwd(), 'data/media.json');
-      
+
       // Read current data
       let currentFiles: MediaFile[] = [];
       if (fs.existsSync(filePath)) {
@@ -146,13 +146,13 @@ export async function addMediaFile(file: MediaFile): Promise<MediaFile> {
         const parsedData = JSON.parse(data);
         currentFiles = Array.isArray(parsedData) ? parsedData : [];
       }
-      
+
       // Add new file
       const updatedFiles = [...currentFiles, file];
-      
+
       // Save back to file
       fs.writeFileSync(filePath, JSON.stringify(updatedFiles, null, 2));
-      
+
       console.log('✅ Media file saved to JSON:', file.name);
       return file;
     } catch (error) {
@@ -175,7 +175,7 @@ export async function addMediaFile(file: MediaFile): Promise<MediaFile> {
 export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: string[]; errors: string[] }> {
   const deletedFiles: string[] = [];
   const errors: string[] = [];
-  
+
   if (canUseFileSystem()) {
     // Development: Read current data, filter, and save back
     try {
@@ -184,7 +184,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
       // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const path = require('path');
       const filePath = path.join(process.cwd(), 'data/media.json');
-      
+
       // Read current data
       let currentFiles: MediaFile[] = [];
       if (fs.existsSync(filePath)) {
@@ -192,10 +192,10 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
         const parsedData = JSON.parse(data);
         currentFiles = Array.isArray(parsedData) ? parsedData : [];
       }
-      
+
       // Collect files to delete for physical file cleanup
       const filesToDelete: MediaFile[] = [];
-      
+
       // Filter out deleted files
       const filteredFiles = currentFiles.filter(file => {
         if (ids.includes(file.id)) {
@@ -205,11 +205,11 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
         }
         return true;
       });
-      
+
       // Save updated data back to JSON
       fs.writeFileSync(filePath, JSON.stringify(filteredFiles, null, 2));
       console.log('✅ Media JSON updated after deletion');
-      
+
       // Delete physical files from public/media
       for (const file of filesToDelete) {
         try {
@@ -222,7 +222,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
           console.warn('⚠️ Could not delete physical file:', file.name, error);
         }
       }
-      
+
     } catch (error) {
       console.error('❌ Error during file deletion:', error);
       errors.push('Failed to update media list');
@@ -230,7 +230,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
   } else {
     // Production: Memory only
     await ensureDataLoaded();
-    
+
     for (const id of ids) {
       const index = mediaFiles.findIndex(file => file.id === id);
       if (index !== -1) {
@@ -241,7 +241,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
       }
     }
   }
-  
+
   return { deletedFiles, errors };
 }
 
@@ -250,33 +250,33 @@ export async function handleFileUpload(formData: FormData): Promise<MediaFile | 
   if (!canUseFileSystem()) {
     throw new Error('File upload only available in development mode');
   }
-  
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
     const fs = require('fs');
     // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
     const path = require('path');
-    
+
     const file = formData.get('file') as File;
     if (!file) return null;
-    
+
     // Generate unique filename
     const timestamp = Date.now();
     const extension = file.name.split('.').pop();
     const filename = `${timestamp}_${file.name}`;
-    
+
     // Save to public/media directory
     const mediaDir = path.join(process.cwd(), 'public/media');
     if (!fs.existsSync(mediaDir)) {
       fs.mkdirSync(mediaDir, { recursive: true });
     }
-    
+
     const filePath = path.join(mediaDir, filename);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
     fs.writeFileSync(filePath, buffer);
-    
+
     // Determine file type
     const ext = extension?.toLowerCase();
     let type: 'image' | 'video' | 'file' = 'file';
@@ -285,7 +285,7 @@ export async function handleFileUpload(formData: FormData): Promise<MediaFile | 
     } else if (['mp4', 'mov', 'webm'].includes(ext || '')) {
       type = 'video';
     }
-    
+
     // Create media file object
     const mediaFile: MediaFile = {
       id: timestamp.toString(),
@@ -299,13 +299,13 @@ export async function handleFileUpload(formData: FormData): Promise<MediaFile | 
       deletable: true,
       isStatic: false
     };
-    
+
     // Add to storage
     await addMediaFile(mediaFile);
-    
+
     console.log('✅ File uploaded successfully:', filename);
     return mediaFile;
-    
+
   } catch (error) {
     console.error('❌ File upload failed:', error);
     throw error;

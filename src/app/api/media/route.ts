@@ -1,12 +1,13 @@
 import { NextResponse, NextRequest } from 'next/server';
 import * as blobStorage from '@/lib/vercel-blob-storage';
 import { MediaFile } from '@/types';
+import { broadcastMediaEvent } from './events/route';
 
 export async function GET() {
   try {
     console.log('🟢 Loading media from Vercel Blob storage');
     const mediaFiles = await blobStorage.getMediaFiles();
-    
+
     // Sort by upload date (newest first)
     const sortedFiles = mediaFiles.sort((a, b) => parseInt(b.id) - parseInt(a.id));
 
@@ -21,7 +22,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Generate new media file entry (for manual/external uploads)
     const mediaFile: MediaFile = {
       id: Date.now().toString(),
@@ -35,10 +36,19 @@ export async function POST(request: NextRequest) {
       deletable: true,
       isStatic: false
     };
-    
+
     console.log('🟢 Adding media to Vercel Blob storage');
     await blobStorage.addMediaFile(mediaFile);
-    
+
+    // Broadcast real-time event
+    broadcastMediaEvent({
+      type: 'upload',
+      data: {
+        file: mediaFile,
+        message: 'New media file added'
+      }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'File entry created successfully',
