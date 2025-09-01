@@ -128,13 +128,85 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
 
   try {
     console.log('🔍 Loading from Blob:', key);
-    const { blobs } = await list({ prefix: key });
-    if (blobs.length === 0) {
-      console.log('📭 No blobs found for:', key);
+    
+    // List all blobs and find ones that match our key pattern
+    const { blobs } = await list();
+    console.log('📋 Total blobs found:', blobs.length);
+    console.log('🔎 Looking for blobs matching:', key);
+    
+    // Enhanced pattern matching to handle duplicate files
+    const matchingBlobs = blobs.filter(blob => {
+      const pathname = blob.pathname;
+      
+      // Exact match
+      if (pathname === key) {
+        console.log('✅ Exact match found:', pathname);
+        return true;
+      }
+      
+      // Pattern match for versioned files (e.g., data/media-files-1234567890.json)
+      const baseKey = key.replace('.json', '');
+      if (pathname.startsWith(baseKey + '-') && pathname.endsWith('.json')) {
+        console.log('✅ Pattern match found:', pathname);
+        return true;
+      }
+      
+      // Legacy pattern match
+      if (pathname.startsWith(key.replace('.json', '-'))) {
+        console.log('✅ Legacy pattern match found:', pathname);
+        return true;
+      }
+      
+      return false;
+    });
+    
+    console.log('🎯 Matching blobs found:', matchingBlobs.length);
+    matchingBlobs.forEach(blob => console.log('  📄', blob.pathname));
+    
+    if (matchingBlobs.length === 0) {
+      console.log('📭 No matching blobs found for:', key);
       return fallback;
     }
 
-    const response = await fetch(blobs[0].url);
+    // For duplicate files, test each one and pick the one with most data
+    let bestBlob = null;
+    let maxItems = -1;
+    
+    console.log('🔍 Testing each blob to find the one with most data...');
+    
+    for (const blob of matchingBlobs) {
+      try {
+        const response = await fetch(blob.url);
+        if (response.ok) {
+          const data = await response.json();
+          const itemCount = Array.isArray(data) ? data.length : 0;
+          console.log(`  📄 ${blob.pathname}: ${itemCount} items`);
+          
+          if (itemCount > maxItems) {
+            maxItems = itemCount;
+            bestBlob = blob;
+            console.log(`    ✅ New best: ${itemCount} items`);
+          }
+        } else {
+          console.log(`  ❌ ${blob.pathname}: HTTP ${response.status}`);
+        }
+      } catch (error) {
+        console.log(`  ❌ ${blob.pathname}: Error - ${error.message}`);
+      }
+    }
+    
+    if (!bestBlob) {
+      console.log('❌ No accessible blobs found');
+      return fallback;
+    }
+    
+    console.log(`🏆 Using best blob: ${bestBlob.pathname} with ${maxItems} items`);
+    
+    const response = await fetch(bestBlob.url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
     console.log('✅ Loaded from Blob:', key, '- items:', Array.isArray(data) ? data.length : 'invalid');
     return Array.isArray(data) ? data : fallback;
