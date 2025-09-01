@@ -10,15 +10,26 @@ export function setToastFunction(toastFn: (message: string, type: 'success' | 'e
 
 // Type guard functions
 function isUploadEventData(data: unknown): data is { file: MediaFile } {
-    return typeof data === 'object' && data !== null && 'file' in data;
+    return typeof data === 'object' && 
+           data !== null && 
+           'file' in data && 
+           typeof (data as any).file === 'object' &&
+           (data as any).file !== null;
 }
 
 function isDeleteEventData(data: unknown): data is { deletedFiles: string[] } {
-    return typeof data === 'object' && data !== null && 'deletedFiles' in data;
+    return typeof data === 'object' && 
+           data !== null && 
+           'deletedFiles' in data && 
+           Array.isArray((data as any).deletedFiles);
 }
 
 function isUpdateEventData(data: unknown): data is { file: MediaFile } {
-    return typeof data === 'object' && data !== null && 'file' in data;
+    return typeof data === 'object' && 
+           data !== null && 
+           'file' in data && 
+           typeof (data as any).file === 'object' &&
+           (data as any).file !== null;
 }
 
 interface MediaEvent {
@@ -61,35 +72,37 @@ export function useRealtimeMedia() {
 
             case 'upload':
                 if (isUploadEventData(event.data)) {
+                    const uploadData = event.data;
                     setMediaFiles(prevFiles => {
                         // Check if file already exists (prevent duplicates)
-                        const exists = prevFiles.some(f => f.id === event.data.file.id);
+                        const exists = prevFiles.some(f => f.id === uploadData.file.id);
                         if (exists) return prevFiles;
 
                         // Add new file to the beginning of the list
-                        return [event.data.file, ...prevFiles];
+                        return [uploadData.file, ...prevFiles];
                     });
                     setLastUpdate(new Date());
-                    console.log('📁 File uploaded:', event.data.file.name);
+                    console.log('📁 File uploaded:', uploadData.file.name);
 
                     // Show toast notification
                     if (addToast) {
-                        addToast(`✅ ${event.data.file.name} uploaded successfully`, 'success');
+                        addToast(`✅ ${uploadData.file.name} uploaded successfully`, 'success');
                     }
                 }
                 break;
 
             case 'delete':
                 if (isDeleteEventData(event.data)) {
+                    const deleteData = event.data;
                     setMediaFiles(prevFiles =>
-                        prevFiles.filter(file => !event.data.deletedFiles.includes(file.id))
+                        prevFiles.filter(file => !deleteData.deletedFiles.includes(file.id))
                     );
                     setLastUpdate(new Date());
-                    console.log('🗑️ Files deleted:', event.data.deletedFiles);
+                    console.log('🗑️ Files deleted:', deleteData.deletedFiles);
 
                     // Show toast notification
                     if (addToast) {
-                        const count = event.data.deletedFiles.length;
+                        const count = deleteData.deletedFiles.length;
                         addToast(`🗑️ ${count} file(s) deleted successfully`, 'success');
                     }
                 }
@@ -97,13 +110,14 @@ export function useRealtimeMedia() {
 
             case 'update':
                 if (isUpdateEventData(event.data)) {
+                    const updateData = event.data;
                     setMediaFiles(prevFiles =>
                         prevFiles.map(file =>
-                            file.id === event.data.file.id ? event.data.file : file
+                            file.id === updateData.file.id ? updateData.file : file
                         )
                     );
                     setLastUpdate(new Date());
-                    console.log('✏️ File updated:', event.data.file.name);
+                    console.log('✏️ File updated:', updateData.file.name);
                 }
                 break;
 
