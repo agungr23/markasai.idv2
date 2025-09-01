@@ -68,7 +68,7 @@ export default function AdminMediaPage() {
         // Then set new data
         setTimeout(() => {
           setUploadedFiles(files);
-          console.log('✅ Loaded', files.length, 'uploaded files:', files.map(f => f.name));
+          console.log('✅ Loaded', files.length, 'uploaded files:', files.map((f: MediaFile) => f.name));
         }, 100);
       } else {
         console.error('❌ API response not ok:', response.status, response.statusText);
