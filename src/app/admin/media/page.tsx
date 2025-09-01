@@ -403,7 +403,7 @@ export default function AdminMediaPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={syncMediaFiles}
+                onClick={() => syncMediaFiles(false)} // Pass false for manual sync
                 disabled={isUploading || isSyncing}
                 className="text-blue-600 hover:text-blue-700"
               >
