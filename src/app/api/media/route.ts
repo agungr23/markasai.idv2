@@ -2,10 +2,15 @@ import { NextResponse, NextRequest } from 'next/server';
 import * as blobStorage from '@/lib/vercel-blob-storage';
 import { MediaFile } from '@/types';
 import { broadcastMediaEvent } from '@/lib/media-events';
+import { autoCleanupStaleMedia } from '@/lib/media-sync';
 
 export async function GET() {
   try {
     console.log('🟢 Loading media from Vercel Blob storage');
+    
+    // Run auto-cleanup to ensure synchronization
+    await autoCleanupStaleMedia();
+    
     const mediaFiles = await blobStorage.getMediaFiles();
 
     // Sort by upload date (newest first)

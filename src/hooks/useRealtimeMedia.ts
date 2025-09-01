@@ -33,7 +33,7 @@ function isUpdateEventData(data: unknown): data is { file: MediaFile } {
 }
 
 interface MediaEvent {
-    type: 'upload' | 'delete' | 'update' | 'connected' | 'ping';
+    type: 'upload' | 'delete' | 'update' | 'connected' | 'ping' | 'sync';
     data?: unknown;
     message?: string;
     timestamp?: number;
@@ -123,6 +123,16 @@ export function useRealtimeMedia() {
 
             case 'ping':
                 // Keep connection alive
+                break;
+
+            case 'sync':
+                // Media synchronization event - reload all files
+                console.log('🔄 Media sync event received');
+                await refreshMediaFiles();
+                
+                if (addToast) {
+                    addToast('🔄 Media synchronized with blob storage', 'info');
+                }
                 break;
 
             default:

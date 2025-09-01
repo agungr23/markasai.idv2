@@ -28,6 +28,7 @@ export default function AdminMediaPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   interface MediaFile {
     id: string;
@@ -237,6 +238,36 @@ export default function AdminMediaPage() {
     }
   };
 
+  const syncMediaFiles = async () => {
+    setIsSyncing(true);
+    try {
+      console.log('🔄 Manual media synchronization started');
+      
+      const response = await fetch('/api/media/sync', {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Sync completed:', result);
+        
+        // Reload media files after sync
+        await loadUploadedFiles();
+        
+        // Show success message
+        const message = `Synchronization completed: ${result.results.synchronized} files valid, ${result.results.removed} stale references removed`;
+        alert(message);
+      } else {
+        throw new Error('Sync failed');
+      }
+    } catch (error) {
+      console.error('❌ Sync failed:', error);
+      alert('Synchronization failed. Please try again.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -341,6 +372,16 @@ export default function AdminMediaPage() {
                 disabled={isUploading || isRefreshing}
               >
                 {isRefreshing ? '🔄 Refreshing...' : '🔄 Refresh'}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={syncMediaFiles}
+                disabled={isUploading || isSyncing}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                {isSyncing ? '🔄 Syncing...' : '🔄 Sync with Blob'}
               </Button>
 
               <Button variant="outline" size="sm">
