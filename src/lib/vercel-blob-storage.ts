@@ -42,6 +42,23 @@ function isVercelProduction() {
   return env.isVercel && env.isProduction && put && list && del;
 }
 
+// Check if blob token is available
+function hasBlobToken() {
+  const env = getEnvironmentInfo();
+  if (!env.isProduction) return false;
+  
+  // Check for blob token in environment
+  try {
+    const hasProcess = typeof globalThis !== 'undefined' && 'process' in globalThis;
+    if (!hasProcess) return false;
+    
+    const processEnv = (globalThis as { process: { env: Record<string, string | undefined> } }).process.env;
+    return !!processEnv.BLOB_READ_WRITE_TOKEN;
+  } catch {
+    return false;
+  }
+}
+
 // Fallback to JSON storage in development
 import * as jsonStorage from './storage-json-only';
 
@@ -258,8 +275,22 @@ export async function saveTestimonials(testimonials: Testimonial[]): Promise<voi
 
 // File Upload untuk Media
 export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
-  if (!isVercelProduction() || !put) {
-    throw new Error('File upload hanya tersedia di production Vercel dengan Blob storage');
+  const env = getEnvironmentInfo();
+  
+  if (!env.isProduction) {
+    throw new Error('File upload ke Blob hanya tersedia di production environment');
+  }
+  
+  if (!env.isVercel) {
+    throw new Error('File upload ke Blob hanya tersedia di Vercel hosting');
+  }
+  
+  if (!put) {
+    throw new Error('@vercel/blob module tidak tersedia. Pastikan dependency sudah terinstall.');
+  }
+  
+  if (!hasBlobToken()) {
+    throw new Error('BLOB_READ_WRITE_TOKEN tidak ditemukan. Silakan setup Vercel Blob storage di dashboard.');
   }
 
   try {
@@ -267,10 +298,14 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
     const timestamp = Date.now();
     const filename = `${timestamp}_${file.name}`;
     
+    console.log(`🚀 Uploading to Vercel Blob: ${filename}`);
+    
     const blob = await put(`media/${filename}`, file, {
       access: 'public',
       contentType: file.type
     });
+
+    console.log(`✅ Successfully uploaded to Blob: ${blob.url}`);
 
     // Create media file entry
     const mediaFile: MediaFile = {
@@ -291,7 +326,20 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
 
     return mediaFile;
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('❌ Vercel Blob upload error:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        throw new Error('BLOB_READ_WRITE_TOKEN tidak valid. Periksa kembali token di environment variables.');
+      }
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        throw new Error('Akses ditolak. Pastikan BLOB_READ_WRITE_TOKEN memiliki permission yang benar.');
+      }
+      if (error.message.includes('413') || error.message.includes('too large')) {
+        throw new Error('File terlalu besar. Maksimal ukuran file adalah 50MB.');
+      }
+    }
+    
     throw error;
   }
 }

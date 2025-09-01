@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { handleFileUpload } from '@/lib/media-storage';
+import { uploadMediaToBlob } from '@/lib/vercel-blob-storage';
+import { getEnvironmentInfo } from '@/lib/environment';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,12 +12,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Temporary implementation - will be replaced with Vercel Blob after deployment
-    return NextResponse.json({
-      success: false,
-      message: 'File upload will be available after Vercel Blob setup',
-      suggestion: 'Setup Vercel Blob storage in dashboard'
-    }, { status: 501 });
+    const env = getEnvironmentInfo();
+    
+    if (env.isVercel && env.isProduction) {
+      // Production Vercel: Use Vercel Blob storage
+      try {
+        const mediaFile = await uploadMediaToBlob(file);
+        return NextResponse.json({
+          success: true,
+          file: mediaFile,
+          message: 'File uploaded to Vercel Blob successfully'
+        });
+      } catch (error) {
+        console.error('Vercel Blob upload failed:', error);
+        return NextResponse.json({
+          error: 'Vercel Blob upload failed',
+          details: error instanceof Error ? error.message : 'Unknown error',
+          suggestion: 'Check BLOB_READ_WRITE_TOKEN environment variable'
+        }, { status: 500 });
+      }
+    } else {
+      // Development: Use local file storage
+      try {
+        const mediaFile = await handleFileUpload(formData);
+        if (!mediaFile) {
+          return NextResponse.json({ error: 'File upload failed' }, { status: 500 });
+        }
+        
+        return NextResponse.json({
+          success: true,
+          file: mediaFile,
+          message: 'File uploaded to local storage successfully'
+        });
+      } catch (error) {
+        console.error('Local file upload failed:', error);
+        return NextResponse.json({
+          error: 'Local file upload failed',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 });
+      }
+    }
 
   } catch (error) {
     console.error('Upload error:', error);

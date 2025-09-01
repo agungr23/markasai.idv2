@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteMultipleMediaFiles } from '@/lib/storage-json-only';
+import { deleteMediaFiles } from '@/lib/vercel-blob-storage';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid file IDs' }, { status: 400 });
     }
 
-    const { deletedFiles, errors } = await deleteMultipleMediaFiles(fileIds);
+    const { deletedFiles, errors } = await deleteMediaFiles(fileIds);
 
     return NextResponse.json({ 
       success: true,

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getMediaFiles, addMediaFile } from '@/lib/storage-json-only';
+import { getMediaFiles, addMediaFile } from '@/lib/vercel-blob-storage';
 import { MediaFile } from '@/types';
 
 export async function GET() {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       isStatic: false
     };
     
-    // Add to media files
+    // Add to media files using Vercel Blob storage
     await addMediaFile(mediaFile);
     
     return NextResponse.json({
