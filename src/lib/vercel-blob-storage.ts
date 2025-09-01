@@ -191,7 +191,7 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
           console.log(`  ❌ ${blob.pathname}: HTTP ${response.status}`);
         }
       } catch (error) {
-        console.log(`  ❌ ${blob.pathname}: Error - ${error.message}`);
+        console.log(`  ❌ ${blob.pathname}: Error - ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
     
