@@ -1,29 +1,16 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getEnvironmentInfo } from '@/lib/environment';
-import { MediaFile } from '@/types';
-
-// Import appropriate storage based on environment
 import * as blobStorage from '@/lib/vercel-blob-storage';
-import * as mediaStorage from '@/lib/media-storage';
+import { MediaFile } from '@/types';
 
 export async function GET() {
   try {
-    const env = getEnvironmentInfo();
-    let mediaFiles: MediaFile[];
-    
-    if (env.isVercel && env.isProduction) {
-      // Production: Use Vercel Blob storage
-      console.log('🟢 Loading media from Vercel Blob storage');
-      mediaFiles = await blobStorage.getMediaFiles();
-    } else {
-      // Development: Use local media storage
-      console.log('🟡 Loading media from local JSON storage');
-      mediaFiles = await mediaStorage.getMediaFiles();
-    }
+    console.log('🟢 Loading media from Vercel Blob storage');
+    const mediaFiles = await blobStorage.getMediaFiles();
     
     // Sort by upload date (newest first)
     const sortedFiles = mediaFiles.sort((a, b) => parseInt(b.id) - parseInt(a.id));
 
+    console.log('✅ Loaded', sortedFiles.length, 'media files from Blob');
     return NextResponse.json({ files: sortedFiles });
   } catch (error) {
     console.error('Error loading media files:', error);
@@ -34,7 +21,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const env = getEnvironmentInfo();
     
     // Generate new media file entry (for manual/external uploads)
     const mediaFile: MediaFile = {
@@ -50,15 +36,8 @@ export async function POST(request: NextRequest) {
       isStatic: false
     };
     
-    if (env.isVercel && env.isProduction) {
-      // Production: Use Vercel Blob storage
-      console.log('🟢 Adding media to Vercel Blob storage');
-      await blobStorage.addMediaFile(mediaFile);
-    } else {
-      // Development: Use local media storage
-      console.log('🟡 Adding media to local JSON storage');
-      await mediaStorage.addMediaFile(mediaFile);
-    }
+    console.log('🟢 Adding media to Vercel Blob storage');
+    await blobStorage.addMediaFile(mediaFile);
     
     return NextResponse.json({
       success: true,

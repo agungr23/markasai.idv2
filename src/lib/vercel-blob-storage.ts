@@ -44,19 +44,30 @@ function isVercelProduction() {
 
 // Check if blob token is available
 function hasBlobToken() {
-  const env = getEnvironmentInfo();
-  if (!env.isProduction) return false;
-  
   // Check for blob token in environment
   try {
     const hasProcess = typeof globalThis !== 'undefined' && 'process' in globalThis;
     if (!hasProcess) return false;
     
     const processEnv = (globalThis as { process: { env: Record<string, string | undefined> } }).process.env;
-    return !!processEnv.BLOB_READ_WRITE_TOKEN;
+    const hasToken = !!processEnv.BLOB_READ_WRITE_TOKEN;
+    console.log('🔑 Blob token check:', hasToken ? 'Token found' : 'Token missing');
+    return hasToken;
   } catch {
     return false;
   }
+}
+
+// Check if blob functions are available
+function canUseBlob() {
+  const hasToken = hasBlobToken();
+  const hasFunctions = !!(put && list && del);
+  console.log('🟢 Blob availability:', {
+    hasToken,
+    hasFunctions,
+    canUse: hasToken && hasFunctions
+  });
+  return hasToken && hasFunctions;
 }
 
 // Fallback to JSON storage in development
@@ -74,8 +85,8 @@ const STORAGE_KEYS = {
 
 // Generic storage functions
 async function saveToBlob<T>(key: string, data: T[]): Promise<void> {
-  if (!isVercelProduction() || !put) {
-    console.log('Development mode: using JSON storage');
+  if (!canUseBlob() || !put) {
+    console.log('⚠️ Blob not available, skipping save for:', key);
     return;
   }
 
@@ -93,8 +104,14 @@ async function saveToBlob<T>(key: string, data: T[]): Promise<void> {
 }
 
 async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
-  if (!isVercelProduction() || !list) {
-    // Development: gunakan JSON storage
+  if (!canUseBlob() || !list) {
+    console.log('⚠️ Blob not available, using fallback for:', key);
+    // Fallback to JSON storage for media files
+    if (key === STORAGE_KEYS.MEDIA_FILES) {
+      return [] as T[]; // Return empty for media files when blob unavailable
+    }
+    
+    // For other data types, use JSON storage
     switch (key) {
       case STORAGE_KEYS.BLOG_POSTS:
         return (await jsonStorage.getBlogPosts()) as T[];
@@ -104,21 +121,22 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
         return (await jsonStorage.getTestimonials()) as T[];
       case STORAGE_KEYS.PRODUCTS:
         return (await jsonStorage.getProducts()) as T[];
-      case STORAGE_KEYS.MEDIA_FILES:
-        return [] as T[]; // Media files tidak disimpan di JSON
       default:
         return fallback;
     }
   }
 
   try {
+    console.log('🔍 Loading from Blob:', key);
     const { blobs } = await list({ prefix: key });
     if (blobs.length === 0) {
+      console.log('📭 No blobs found for:', key);
       return fallback;
     }
 
     const response = await fetch(blobs[0].url);
     const data = await response.json();
+    console.log('✅ Loaded from Blob:', key, '- items:', Array.isArray(data) ? data.length : 'invalid');
     return Array.isArray(data) ? data : fallback;
   } catch (error) {
     console.error(`❌ Failed to load from Vercel Blob: ${key}`, error);
@@ -234,8 +252,8 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
     return true;
   });
   
-  // Delete actual blob files if in production
-  if (isVercelProduction() && del) {
+  // Delete actual blob files if blob is available
+  if (canUseBlob() && del) {
     for (const file of filesToDelete) {
       try {
         // Extract blob URL and delete from Vercel Blob
@@ -275,22 +293,12 @@ export async function saveTestimonials(testimonials: Testimonial[]): Promise<voi
 
 // File Upload untuk Media
 export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
-  const env = getEnvironmentInfo();
-  
-  if (!env.isProduction) {
-    throw new Error('File upload ke Blob hanya tersedia di production environment');
-  }
-  
-  if (!env.isVercel) {
-    throw new Error('File upload ke Blob hanya tersedia di Vercel hosting');
+  if (!canUseBlob()) {
+    throw new Error('Vercel Blob storage tidak tersedia. Pastikan BLOB_READ_WRITE_TOKEN sudah dikonfigurasi.');
   }
   
   if (!put) {
     throw new Error('@vercel/blob module tidak tersedia. Pastikan dependency sudah terinstall.');
-  }
-  
-  if (!hasBlobToken()) {
-    throw new Error('BLOB_READ_WRITE_TOKEN tidak ditemukan. Silakan setup Vercel Blob storage di dashboard.');
   }
 
   try {

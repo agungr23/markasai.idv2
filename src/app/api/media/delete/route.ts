@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnvironmentInfo } from '@/lib/environment';
-
-// Import appropriate storage based on environment
 import * as blobStorage from '@/lib/vercel-blob-storage';
-import * as mediaStorage from '@/lib/media-storage';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -13,18 +9,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid file IDs' }, { status: 400 });
     }
 
-    const env = getEnvironmentInfo();
-    let result: { deletedFiles: string[]; errors: string[] };
-    
-    if (env.isVercel && env.isProduction) {
-      // Production: Use Vercel Blob storage
-      console.log('🟢 Deleting media from Vercel Blob storage');
-      result = await blobStorage.deleteMediaFiles(fileIds);
-    } else {
-      // Development: Use local media storage
-      console.log('🟡 Deleting media from local JSON storage');
-      result = await mediaStorage.deleteMediaFiles(fileIds);
-    }
+    console.log('🟢 Deleting media from Vercel Blob storage');
+    const result = await blobStorage.deleteMediaFiles(fileIds);
 
     return NextResponse.json({ 
       success: true,
