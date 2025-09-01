@@ -10,7 +10,7 @@ export function setToastFunction(toastFn: (message: string, type: 'success' | 'e
 
 interface MediaEvent {
     type: 'upload' | 'delete' | 'update' | 'connected' | 'ping';
-    data?: any;
+    data?: unknown;
     message?: string;
     timestamp?: number;
 }
@@ -30,8 +30,8 @@ export function useRealtimeMedia() {
                 setMediaFiles(data.files || []);
                 setLastUpdate(new Date());
             }
-        } catch (error) {
-            console.error('Failed to load media files:', error);
+        } catch {
+            console.error('Failed to load media files');
         }
     }, []);
 
@@ -121,13 +121,13 @@ export function useRealtimeMedia() {
                 try {
                     const mediaEvent: MediaEvent = JSON.parse(event.data);
                     handleMediaEvent(mediaEvent);
-                } catch (error) {
-                    console.error('Failed to parse SSE event:', error);
+                } catch {
+                    console.error('Failed to parse SSE event');
                 }
             };
 
-            eventSource.onerror = (error) => {
-                console.error('SSE error:', error);
+            eventSource.onerror = () => {
+                console.error('SSE connection error');
                 setIsConnected(false);
                 setConnectionStatus('disconnected');
 

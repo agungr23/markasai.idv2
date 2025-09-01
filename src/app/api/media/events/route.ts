@@ -7,14 +7,14 @@ const connections = new Set<ReadableStreamDefaultController>();
 // Helper to broadcast events to all connected clients
 export function broadcastMediaEvent(event: {
     type: 'upload' | 'delete' | 'update';
-    data: any;
+    data: unknown;
 }) {
     const message = `data: ${JSON.stringify(event)}\n\n`;
 
     connections.forEach(controller => {
         try {
             controller.enqueue(new TextEncoder().encode(message));
-        } catch (error) {
+        } catch {
             // Remove dead connections
             connections.delete(controller);
         }
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
                 try {
                     const ping = `data: ${JSON.stringify({ type: 'ping', timestamp: Date.now() })}\n\n`;
                     controller.enqueue(new TextEncoder().encode(ping));
-                } catch (error) {
+                } catch {
                     clearInterval(keepAlive);
                     connections.delete(controller);
                 }
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
                 connections.delete(controller);
                 try {
                     controller.close();
-                } catch (error) {
+                } catch {
                     // Connection already closed
                 }
             });
