@@ -27,6 +27,7 @@ export default function AdminMediaPage() {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   interface MediaFile {
     id: string;
@@ -43,19 +44,39 @@ export default function AdminMediaPage() {
 
   // Load uploaded files from API on component mount
   useEffect(() => {
+    console.log('🔄 Loading media files on page load...');
     loadUploadedFiles();
   }, []);
 
   const loadUploadedFiles = async () => {
+    setIsRefreshing(true);
     try {
-      const response = await fetch('/api/media');
+      console.log('🚀 Fetching media files from API...');
+      
+      // Add cache buster to ensure fresh data
+      const timestamp = Date.now();
+      const response = await fetch(`/api/media?t=${timestamp}`);
+      
       if (response.ok) {
         const data = await response.json();
-        setUploadedFiles(data.files || []);
-        console.log('✅ Loaded uploaded files:', data.files?.length || 0);
+        console.log('📊 Raw API response:', data);
+        const files = data.files || [];
+        
+        // Clear existing state first to prevent stale data
+        setUploadedFiles([]);
+        
+        // Then set new data
+        setTimeout(() => {
+          setUploadedFiles(files);
+          console.log('✅ Loaded', files.length, 'uploaded files:', files.map(f => f.name));
+        }, 100);
+      } else {
+        console.error('❌ API response not ok:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('❌ Failed to load uploaded files:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -98,14 +119,12 @@ export default function AdminMediaPage() {
         }
       }
 
-      // Add uploaded files to state
+      // Add uploaded files to state AND reload from server to ensure consistency
       if (uploadedResults.length > 0) {
-        setUploadedFiles(prev => {
-          const updated = [...uploadedResults, ...prev];
-          console.log('✅ All files uploaded successfully:', uploadedResults.length);
-          console.log('✅ Total uploaded files now:', updated.length);
-          return updated;
-        });
+        console.log('✅ Upload successful! Reloading media list to ensure consistency...');
+        
+        // Reload fresh data from server instead of just updating state
+        await loadUploadedFiles();
 
         setUploadSuccess(true);
         setTimeout(() => setUploadSuccess(false), 3000);
@@ -172,6 +191,8 @@ export default function AdminMediaPage() {
 
   const deleteFiles = async (fileIds: string[]) => {
     try {
+      console.log('🗑️ Deleting files:', fileIds);
+      
       // Delete files from server
       const response = await fetch('/api/media/delete', {
         method: 'DELETE',
@@ -185,8 +206,8 @@ export default function AdminMediaPage() {
         const result = await response.json();
         console.log('✅ Files deleted from server:', result.deletedFiles);
 
-        // Remove from state
-        setUploadedFiles(prev => prev.filter(file => !fileIds.includes(file.id)));
+        // Reload fresh data from server instead of just updating state
+        await loadUploadedFiles();
         setSelectedFiles([]);
 
         // Show success message
@@ -314,6 +335,15 @@ export default function AdminMediaPage() {
             </div>
             
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadUploadedFiles}
+                disabled={isUploading || isRefreshing}
+              >
+                {isRefreshing ? '🔄 Refreshing...' : '🔄 Refresh'}
+              </Button>
+              
               <Button variant="outline" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
                 Filter

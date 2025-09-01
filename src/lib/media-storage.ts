@@ -81,7 +81,7 @@ async function ensureDataLoaded() {
 // Get all media files
 export async function getMediaFiles(): Promise<MediaFile[]> {
   if (canUseFileSystem()) {
-    // Development: Always read fresh data from JSON file
+    // Development: Always read fresh data from JSON file and validate physical files
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const fs = require('fs');
@@ -92,12 +92,31 @@ export async function getMediaFiles(): Promise<MediaFile[]> {
       if (fs.existsSync(filePath)) {
         const data = fs.readFileSync(filePath, 'utf8');
         const parsedData = JSON.parse(data);
-        console.log('📱 Loaded', parsedData.length, 'media files from JSON');
-        return Array.isArray(parsedData) ? parsedData : [];
-      } else {
-        console.log('⚠️ media.json file not found, returning empty array');
-        return [];
+        
+        if (Array.isArray(parsedData)) {
+          // Validate that physical files exist
+          const validFiles = parsedData.filter(file => {
+            const mediaPath = path.join(process.cwd(), 'public/media', file.name);
+            const exists = fs.existsSync(mediaPath);
+            if (!exists) {
+              console.log(`⚠️ File missing: ${file.name}, removing from list`);
+            }
+            return exists;
+          });
+          
+          // If we filtered out any files, update the JSON
+          if (validFiles.length !== parsedData.length) {
+            console.log(`🔄 Cleaning up media.json: ${parsedData.length} -> ${validFiles.length} files`);
+            fs.writeFileSync(filePath, JSON.stringify(validFiles, null, 2));
+          }
+          
+          console.log('📱 Loaded', validFiles.length, 'validated media files from JSON');
+          return validFiles;
+        }
       }
+      
+      console.log('⚠️ media.json file not found or invalid, returning empty array');
+      return [];
     } catch (error) {
       console.error('❌ Error reading media.json:', error);
       return [];
