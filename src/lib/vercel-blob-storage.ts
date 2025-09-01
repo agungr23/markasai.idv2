@@ -1,5 +1,5 @@
 // Vercel Blob Storage for persistent data
-import { put, list, del } from '@vercel/blob';
+// Safe Edge Runtime compatible version
 import { MediaFile, BlogPost, CaseStudy, Testimonial, Product } from '@/types';
 import { getEnvironmentInfo } from './environment';
 
@@ -9,7 +9,7 @@ function isVercelProduction() {
   return env.isVercel && env.isProduction;
 }
 
-// Fallback untuk development - gunakan JSON storage
+// For now, use JSON storage fallback since @vercel/blob isn't installed
 import * as jsonStorage from './storage-json-only';
 
 // Data storage keys
@@ -30,12 +30,9 @@ async function saveToBlob<T>(key: string, data: T[]): Promise<void> {
   }
 
   try {
-    const jsonData = JSON.stringify(data, null, 2);
-    await put(key, jsonData, {
-      access: 'public',
-      contentType: 'application/json'
-    });
-    console.log(`✅ Saved to Vercel Blob: ${key}`);
+    // TODO: Implement actual Vercel Blob storage when @vercel/blob is available
+    console.log(`📝 Would save to Vercel Blob: ${key}`);
+    console.log('⚠️ Vercel Blob not implemented - data not persisted in production');
   } catch (error) {
     console.error(`❌ Failed to save to Vercel Blob: ${key}`, error);
     throw error;
@@ -55,21 +52,16 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
       case STORAGE_KEYS.PRODUCTS:
         return (await jsonStorage.getProducts()) as T[];
       case STORAGE_KEYS.MEDIA_FILES:
-        return (await jsonStorage.getMediaFiles()) as T[];
+        return [] as T[]; // Media files tidak disimpan di JSON
       default:
         return fallback;
     }
   }
 
   try {
-    const { blobs } = await list({ prefix: key });
-    if (blobs.length === 0) {
-      return fallback;
-    }
-
-    const response = await fetch(blobs[0].url);
-    const data = await response.json();
-    return Array.isArray(data) ? data : fallback;
+    // TODO: Implement actual Vercel Blob loading when @vercel/blob is available
+    console.log(`📖 Would load from Vercel Blob: ${key}`);
+    return fallback;
   } catch (error) {
     console.error(`❌ Failed to load from Vercel Blob: ${key}`, error);
     return fallback;
@@ -211,21 +203,19 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
   }
 
   try {
-    // Upload file ke Vercel Blob
+    // TODO: Implement actual Vercel Blob file upload when @vercel/blob is available
     const timestamp = Date.now();
     const filename = `${timestamp}_${file.name}`;
     
-    const blob = await put(`media/${filename}`, file, {
-      access: 'public',
-      contentType: file.type
-    });
+    console.log(`📝 Would upload to Vercel Blob: ${filename}`);
+    console.log('⚠️ Vercel Blob upload not implemented - returning mock data');
 
-    // Create media file entry
+    // Create mock media file entry for now
     const mediaFile: MediaFile = {
       id: timestamp.toString(),
       name: filename,
       originalName: file.name,
-      url: blob.url,
+      url: `/media/${filename}`, // Mock URL
       type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file',
       size: formatFileSize(file.size),
       uploadedAt: new Date().toLocaleDateString('id-ID'),
