@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
   
   // Environment-specific configurations
   env: {
-    STORAGE_TYPE: typeof process !== 'undefined' && process.env.NODE_ENV === 'production' ? 'hybrid' : 'file',
+    STORAGE_TYPE: process.env.NODE_ENV === 'production' ? 'hybrid' : 'file',
   },
   
   // Headers for better performance

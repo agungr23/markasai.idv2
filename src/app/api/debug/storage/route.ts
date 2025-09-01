@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getEnvironmentInfo } from '@/lib/environment';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'health';
 
   // Security check - only allow in development
-  if (process.env.NODE_ENV !== 'development') {
+  const env = getEnvironmentInfo();
+  if (env.isProduction) {
     return NextResponse.json({
       success: false,
       error: 'Debug endpoint only available in development mode'
@@ -22,9 +24,9 @@ export async function GET(request: NextRequest) {
           canRead: true,
           canWrite: true,
           environment: {
-            isProduction: process.env.NODE_ENV === 'production',
-            isServerless: !!process.env.VERCEL,
-            runtime: 'Edge Runtime'
+            isProduction: env.isProduction,
+            isServerless: env.isServerless,
+            runtime: env.runtime
           }
         };
         
@@ -37,8 +39,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           debug: {
-            environment: process.env.NODE_ENV,
-            platform: process.env.VERCEL ? 'Vercel' : 'Local',
+            environment: env.isProduction ? 'production' : 'development',
+            platform: env.isVercel ? 'Vercel' : env.isNetlify ? 'Netlify' : 'Local',
             timestamp: new Date().toISOString()
           }
         });

@@ -1,10 +1,12 @@
 // Vercel Blob Storage for persistent data
 import { put, list, del } from '@vercel/blob';
 import { MediaFile, BlogPost, CaseStudy, Testimonial, Product } from '@/types';
+import { getEnvironmentInfo } from './environment';
 
 // Environment check
 function isVercelProduction() {
-  return process.env.VERCEL === '1' && process.env.NODE_ENV === 'production';
+  const env = getEnvironmentInfo();
+  return env.isVercel && env.isProduction;
 }
 
 // Fallback untuk development - gunakan JSON storage
