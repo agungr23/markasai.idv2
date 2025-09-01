@@ -22,5 +22,17 @@
     "dimensions": "400x400",
     "deletable": true,
     "isStatic": false
+  },
+  {
+    "id": "1756697848492",
+    "name": "1756697848492_icon-2.jpeg",
+    "originalName": "icon-2.jpeg",
+    "url": "/media/1756697848492_icon-2.jpeg",
+    "type": "image",
+    "size": "36.52 KB",
+    "uploadedAt": "1/9/2025",
+    "dimensions": "Calculating...",
+    "deletable": true,
+    "isStatic": false
   }
 ]

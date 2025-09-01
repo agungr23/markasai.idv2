@@ -69,41 +69,50 @@ export default function AdminMediaPage() {
     setIsUploading(true);
 
     try {
-      // Create FormData for API upload
-      const formData = new FormData();
-      Array.from(fileList).forEach(file => {
-        formData.append('files', file);
-      });
+      const uploadedResults = [];
+      
+      // Upload files one by one
+      for (const file of Array.from(fileList)) {
+        const formData = new FormData();
+        formData.append('file', file); // Use 'file' to match API expectation
+        
+        console.log('Uploading file:', file.name, 'size:', file.size);
 
-      // Upload to API
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
+        const result = await response.json();
+        
+        if (!response.ok) {
+          console.error('Upload failed for', file.name, ':', result);
+          throw new Error(result.error || `Upload failed for ${file.name}`);
+        }
+
+        if (result.success && result.file) {
+          uploadedResults.push(result.file);
+          console.log('✅ File uploaded successfully:', result.file.name);
+        } else {
+          throw new Error(result.error || `Upload failed for ${file.name}`);
+        }
       }
 
-      const result = await response.json();
-
-      if (result.success && result.files) {
-        // Add uploaded files to uploaded files state
+      // Add uploaded files to state
+      if (uploadedResults.length > 0) {
         setUploadedFiles(prev => {
-          const updated = [...result.files, ...prev];
-          console.log('✅ Files uploaded successfully:', result.files.length);
+          const updated = [...uploadedResults, ...prev];
+          console.log('✅ All files uploaded successfully:', uploadedResults.length);
           console.log('✅ Total uploaded files now:', updated.length);
           return updated;
         });
 
         setUploadSuccess(true);
         setTimeout(() => setUploadSuccess(false), 3000);
-      } else {
-        throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
       console.error('❌ Upload failed:', error);
-      alert('Upload gagal. Silakan coba lagi.');
+      alert(`Upload gagal: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsUploading(false);
     }

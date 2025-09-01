@@ -10,8 +10,30 @@ let mediaFiles: MediaFile[] = [];
 // Helper to detect environment capabilities
 function canUseFileSystem() {
   try {
-    return isDevelopment && typeof require !== 'undefined';
-  } catch {
+    // Check if we're in a server environment
+    if (typeof window !== 'undefined') {
+      return false; // Client-side
+    }
+    
+    // Check if we're in development
+    if (!isDevelopment) {
+      return false; // Production
+    }
+    
+    // Try to access require function
+    if (typeof require === 'undefined') {
+      return false; // No require available
+    }
+    
+    // Try to require fs and path modules
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path');
+    
+    return !!(fs && path);
+  } catch (error) {
+    console.log('⚠️ File system not available:', error);
     return false;
   }
 }
