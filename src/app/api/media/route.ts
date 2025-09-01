@@ -8,7 +8,8 @@ export async function GET() {
   try {
     console.log('🟢 Loading media from Vercel Blob storage');
     
-    // Run auto-cleanup to ensure synchronization
+    // Always run auto-cleanup to ensure synchronization
+    console.log('🧹 Running auto-cleanup for better synchronization...');
     await autoCleanupStaleMedia();
     
     const mediaFiles = await blobStorage.getMediaFiles();
@@ -16,7 +17,7 @@ export async function GET() {
     // Sort by upload date (newest first)
     const sortedFiles = mediaFiles.sort((a, b) => parseInt(b.id) - parseInt(a.id));
 
-    console.log('✅ Loaded', sortedFiles.length, 'media files from Blob');
+    console.log('✅ Loaded', sortedFiles.length, 'media files from Blob (after cleanup)');
     return NextResponse.json({ files: sortedFiles });
   } catch (error) {
     console.error('Error loading media files:', error);

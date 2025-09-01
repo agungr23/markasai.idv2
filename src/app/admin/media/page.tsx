@@ -47,6 +47,23 @@ export default function AdminMediaPage() {
   useEffect(() => {
     console.log('🔄 Loading media files on page load...');
     loadUploadedFiles();
+    
+    // Also run synchronization automatically on page load
+    setTimeout(() => {
+      console.log('🔄 Auto-running synchronization on page load...');
+      syncMediaFiles(true); // Pass true for auto-sync
+    }, 1000); // Wait 1 second after initial load
+    
+    // Set up automatic synchronization every 2 minutes
+    const syncInterval = setInterval(() => {
+      console.log('🔄 Auto-sync: Running periodic synchronization...');
+      syncMediaFiles(true); // Pass true for auto-sync
+    }, 120000); // 2 minutes
+    
+    // Cleanup interval on unmount
+    return () => {
+      clearInterval(syncInterval);
+    };
   }, []);
 
   const loadUploadedFiles = async () => {
@@ -238,10 +255,11 @@ export default function AdminMediaPage() {
     }
   };
 
-  const syncMediaFiles = async () => {
-    setIsSyncing(true);
+  const syncMediaFiles = async (isAutoSync = false) => {
+    if (!isAutoSync) setIsSyncing(true); // Only show loading state for manual sync
+    
     try {
-      console.log('🔄 Manual media synchronization started');
+      console.log('🔄 Media synchronization started', isAutoSync ? '(auto)' : '(manual)');
       
       const response = await fetch('/api/media/sync', {
         method: 'POST'
@@ -254,17 +272,25 @@ export default function AdminMediaPage() {
         // Reload media files after sync
         await loadUploadedFiles();
         
-        // Show success message
-        const message = `Synchronization completed: ${result.results.synchronized} files valid, ${result.results.removed} stale references removed`;
-        alert(message);
+        // Show success message only for manual sync or if files were removed
+        if (!isAutoSync || result.results.removed > 0) {
+          const message = `Synchronization completed: ${result.results.synchronized} files valid, ${result.results.removed} stale references removed`;
+          if (!isAutoSync) {
+            alert(message);
+          } else {
+            console.log('🧹 Auto-sync:', message);
+          }
+        }
       } else {
         throw new Error('Sync failed');
       }
     } catch (error) {
       console.error('❌ Sync failed:', error);
-      alert('Synchronization failed. Please try again.');
+      if (!isAutoSync) {
+        alert('Synchronization failed. Please try again.');
+      }
     } finally {
-      setIsSyncing(false);
+      if (!isAutoSync) setIsSyncing(false);
     }
   };
 

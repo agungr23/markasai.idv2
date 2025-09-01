@@ -37,16 +37,31 @@ export async function syncMediaWithBlobStorage(): Promise<{
 
     for (const localFile of localMediaFiles) {
       // Check if file URL exists in blob storage
+      // More comprehensive checking:
       const isInBlob = blobUrlMap.has(localFile.url) || 
-                      blobFiles.some(blobFile => 
-                        blobFile.pathname === getPathnameFromUrl(localFile.url) ||
-                        blobFile.pathname.endsWith(localFile.name)
-                      );
+                      blobFiles.some(blobFile => {
+                        // Check by URL match
+                        if (blobFile.url === localFile.url) return true;
+                        
+                        // Check by pathname match
+                        const localPathname = getPathnameFromUrl(localFile.url);
+                        if (blobFile.pathname === localPathname) return true;
+                        
+                        // Check by filename match
+                        if (blobFile.pathname.endsWith(localFile.name)) return true;
+                        
+                        // Check by filename without path
+                        const blobFilename = blobFile.pathname.split('/').pop();
+                        if (blobFilename === localFile.name) return true;
+                        
+                        return false;
+                      });
 
       if (isInBlob) {
         validFiles.push(localFile);
       } else {
         console.log(`❌ Stale file detected: ${localFile.name} (URL: ${localFile.url})`);
+        console.log(`   🔍 Blob files available:`, blobFiles.map(bf => bf.pathname).slice(0, 5));
         staleFiles.push(localFile);
       }
     }
