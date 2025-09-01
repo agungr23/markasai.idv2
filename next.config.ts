@@ -39,9 +39,6 @@ const nextConfig: NextConfig = {
   // Enable compression
   compress: true,
   
-  // Optimize CSS
-  optimizeFonts: true,
-  
   // Environment-specific configurations
   env: {
     STORAGE_TYPE: process.env.NODE_ENV === 'production' ? 'hybrid' : 'file',

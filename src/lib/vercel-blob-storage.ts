@@ -3,12 +3,29 @@
 import { MediaFile, BlogPost, CaseStudy, Testimonial, Product } from '@/types';
 import { getEnvironmentInfo } from './environment';
 
+// Type definitions for Vercel Blob functions
+type BlobPutOptions = {
+  access: 'public' | 'private';
+  contentType?: string;
+};
+
+type BlobListOptions = {
+  prefix?: string;
+};
+
+type BlobListResult = {
+  blobs: Array<{ url: string; pathname: string }>;
+};
+
 // Conditional import for Vercel Blob to avoid build errors in development
-let put: any, list: any, del: any;
+let put: ((pathname: string, body: File | string, options: BlobPutOptions) => Promise<{ url: string }>) | undefined;
+let list: ((options?: BlobListOptions) => Promise<BlobListResult>) | undefined;
+let del: ((url: string) => Promise<void>) | undefined;
 
 if (typeof window === 'undefined') {
   // Server-side only imports
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const blobModule = require('@vercel/blob');
     put = blobModule.put;
     list = blobModule.list;
@@ -40,7 +57,7 @@ const STORAGE_KEYS = {
 
 // Generic storage functions
 async function saveToBlob<T>(key: string, data: T[]): Promise<void> {
-  if (!isVercelProduction()) {
+  if (!isVercelProduction() || !put) {
     console.log('Development mode: using JSON storage');
     return;
   }
@@ -59,7 +76,7 @@ async function saveToBlob<T>(key: string, data: T[]): Promise<void> {
 }
 
 async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
-  if (!isVercelProduction()) {
+  if (!isVercelProduction() || !list) {
     // Development: gunakan JSON storage
     switch (key) {
       case STORAGE_KEYS.BLOG_POSTS:
@@ -201,7 +218,7 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
   });
   
   // Delete actual blob files if in production
-  if (isVercelProduction()) {
+  if (isVercelProduction() && del) {
     for (const file of filesToDelete) {
       try {
         // Extract blob URL and delete from Vercel Blob
@@ -241,8 +258,8 @@ export async function saveTestimonials(testimonials: Testimonial[]): Promise<voi
 
 // File Upload untuk Media
 export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
-  if (!isVercelProduction()) {
-    throw new Error('File upload hanya tersedia di production Vercel');
+  if (!isVercelProduction() || !put) {
+    throw new Error('File upload hanya tersedia di production Vercel dengan Blob storage');
   }
 
   try {
