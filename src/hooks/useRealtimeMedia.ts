@@ -60,7 +60,7 @@ export function useRealtimeMedia() {
     }, []);
 
     // Handle real-time events
-    const handleMediaEvent = useCallback((event: MediaEvent) => {
+    const handleMediaEvent = useCallback(async (event: MediaEvent) => {
         console.log('🔄 Real-time media event:', event);
 
         switch (event.type) {
