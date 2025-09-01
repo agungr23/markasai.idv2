@@ -329,18 +329,39 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
     console.error('❌ Vercel Blob upload error:', error);
     
     if (error instanceof Error) {
-      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-        throw new Error('BLOB_READ_WRITE_TOKEN tidak valid. Periksa kembali token di environment variables.');
+      const errorMessage = error.message.toLowerCase();
+      
+      if (errorMessage.includes('unauthorized') || errorMessage.includes('401')) {
+        throw new Error('BLOB_READ_WRITE_TOKEN tidak valid atau expired. Silakan generate token baru di Vercel Dashboard → Storage → Blob → Settings.');
       }
-      if (error.message.includes('403') || error.message.includes('Forbidden')) {
-        throw new Error('Akses ditolak. Pastikan BLOB_READ_WRITE_TOKEN memiliki permission yang benar.');
+      
+      if (errorMessage.includes('forbidden') || errorMessage.includes('403')) {
+        throw new Error('Akses ke Blob storage ditolak. Pastikan BLOB_READ_WRITE_TOKEN memiliki permission write yang benar.');
       }
-      if (error.message.includes('413') || error.message.includes('too large')) {
-        throw new Error('File terlalu besar. Maksimal ukuran file adalah 50MB.');
+      
+      if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+        throw new Error('Blob storage tidak ditemukan. Pastikan Blob database sudah dibuat di Vercel Dashboard → Storage.');
+      }
+      
+      if (errorMessage.includes('too large') || errorMessage.includes('413')) {
+        throw new Error('File terlalu besar. Maksimal ukuran file adalah 50MB. Silakan compress file terlebih dahulu.');
+      }
+      
+      if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        throw new Error('Quota Blob storage terlampaui. Upgrade plan Vercel atau hapus file lama untuk membuat ruang.');
+      }
+      
+      if (errorMessage.includes('timeout')) {
+        throw new Error('Upload timeout. Coba upload file yang lebih kecil atau check koneksi internet.');
+      }
+      
+      if (errorMessage.includes('blob_read_write_token')) {
+        throw new Error('BLOB_READ_WRITE_TOKEN belum diset. Silakan set environment variable di Vercel Dashboard → Settings → Environment Variables.');
       }
     }
     
-    throw error;
+    // Generic error with helpful message
+    throw new Error(`Vercel Blob upload gagal: ${error instanceof Error ? error.message : 'Unknown error'}. Silakan check BLOB_READ_WRITE_TOKEN di environment variables.`);
   }
 }
 
