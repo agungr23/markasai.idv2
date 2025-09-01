@@ -29,6 +29,7 @@ export default function AdminMediaPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isForceCleanup, setIsForceCleanup] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   interface MediaFile {
     id: string;
@@ -294,6 +295,40 @@ export default function AdminMediaPage() {
     }
   };
 
+  const forceCleanupMedia = async () => {
+    if (!confirm('This will aggressively remove all stale media references. Are you sure?')) {
+      return;
+    }
+    
+    setIsForceCleanup(true);
+    try {
+      console.log('🚑 Force cleanup started');
+      
+      const response = await fetch('/api/media/force-cleanup', {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Force cleanup completed:', result);
+        
+        // Reload media files after cleanup
+        await loadUploadedFiles();
+        
+        // Show detailed results
+        const message = `Force cleanup completed:\n- Total before: ${result.results.totalBefore}\n- Total after: ${result.results.totalAfter}\n- Removed: ${result.results.removed} stale files`;
+        alert(message);
+      } else {
+        throw new Error('Force cleanup failed');
+      }
+    } catch (error) {
+      console.error('❌ Force cleanup failed:', error);
+      alert('Force cleanup failed. Please try again.');
+    } finally {
+      setIsForceCleanup(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -408,6 +443,16 @@ export default function AdminMediaPage() {
                 className="text-blue-600 hover:text-blue-700"
               >
                 {isSyncing ? '🔄 Syncing...' : '🔄 Sync with Blob'}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={forceCleanupMedia}
+                disabled={isUploading || isSyncing || isForceCleanup}
+                className="text-red-600 hover:text-red-700 border-red-200"
+              >
+                {isForceCleanup ? '🚑 Force Cleaning...' : '🚑 Force Cleanup'}
               </Button>
 
               <Button variant="outline" size="sm">
