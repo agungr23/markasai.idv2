@@ -122,10 +122,17 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
         
         // Try to delete actual file from public/media
         try {
-          const mediaPath = path.join(process.cwd(), 'public/media', deletedFile.name);
-          if (fs.existsSync(mediaPath)) {
-            fs.unlinkSync(mediaPath);
-            console.log('✅ Physical file deleted:', deletedFile.name);
+          if (canUseFileSystem()) {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+            const fs = require('fs');
+            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+            const path = require('path');
+            
+            const mediaPath = path.join(process.cwd(), 'public/media', deletedFile.name);
+            if (fs.existsSync(mediaPath)) {
+              fs.unlinkSync(mediaPath);
+              console.log('✅ Physical file deleted:', deletedFile.name);
+            }
           }
         } catch (error) {
           console.warn('⚠️ Could not delete physical file:', error);
