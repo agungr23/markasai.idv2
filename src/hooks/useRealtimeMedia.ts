@@ -13,23 +13,23 @@ function isUploadEventData(data: unknown): data is { file: MediaFile } {
     return typeof data === 'object' && 
            data !== null && 
            'file' in data && 
-           typeof (data as any).file === 'object' &&
-           (data as any).file !== null;
+           typeof (data as Record<string, unknown>).file === 'object' &&
+           (data as Record<string, unknown>).file !== null;
 }
 
 function isDeleteEventData(data: unknown): data is { deletedFiles: string[] } {
     return typeof data === 'object' && 
            data !== null && 
            'deletedFiles' in data && 
-           Array.isArray((data as any).deletedFiles);
+           Array.isArray((data as Record<string, unknown>).deletedFiles);
 }
 
 function isUpdateEventData(data: unknown): data is { file: MediaFile } {
     return typeof data === 'object' && 
            data !== null && 
            'file' in data && 
-           typeof (data as any).file === 'object' &&
-           (data as any).file !== null;
+           typeof (data as Record<string, unknown>).file === 'object' &&
+           (data as Record<string, unknown>).file !== null;
 }
 
 interface MediaEvent {
