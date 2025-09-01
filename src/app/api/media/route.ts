@@ -1,10 +1,25 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getMediaFiles, addMediaFile } from '@/lib/vercel-blob-storage';
+import { getEnvironmentInfo } from '@/lib/environment';
 import { MediaFile } from '@/types';
+
+// Import appropriate storage based on environment
+import * as blobStorage from '@/lib/vercel-blob-storage';
+import * as mediaStorage from '@/lib/media-storage';
 
 export async function GET() {
   try {
-    const mediaFiles = await getMediaFiles();
+    const env = getEnvironmentInfo();
+    let mediaFiles: MediaFile[];
+    
+    if (env.isVercel && env.isProduction) {
+      // Production: Use Vercel Blob storage
+      console.log('🟢 Loading media from Vercel Blob storage');
+      mediaFiles = await blobStorage.getMediaFiles();
+    } else {
+      // Development: Use local media storage
+      console.log('🟡 Loading media from local JSON storage');
+      mediaFiles = await mediaStorage.getMediaFiles();
+    }
     
     // Sort by upload date (newest first)
     const sortedFiles = mediaFiles.sort((a, b) => parseInt(b.id) - parseInt(a.id));
@@ -19,6 +34,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const env = getEnvironmentInfo();
     
     // Generate new media file entry (for manual/external uploads)
     const mediaFile: MediaFile = {
@@ -34,8 +50,15 @@ export async function POST(request: NextRequest) {
       isStatic: false
     };
     
-    // Add to media files using Vercel Blob storage
-    await addMediaFile(mediaFile);
+    if (env.isVercel && env.isProduction) {
+      // Production: Use Vercel Blob storage
+      console.log('🟢 Adding media to Vercel Blob storage');
+      await blobStorage.addMediaFile(mediaFile);
+    } else {
+      // Development: Use local media storage
+      console.log('🟡 Adding media to local JSON storage');
+      await mediaStorage.addMediaFile(mediaFile);
+    }
     
     return NextResponse.json({
       success: true,

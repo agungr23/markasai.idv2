@@ -80,88 +80,146 @@ async function ensureDataLoaded() {
 
 // Get all media files
 export async function getMediaFiles(): Promise<MediaFile[]> {
-  await ensureDataLoaded();
-  return [...mediaFiles];
-}
-
-// Add media file
-export async function addMediaFile(file: MediaFile): Promise<MediaFile> {
-  await ensureDataLoaded();
-  
   if (canUseFileSystem()) {
-    // Development: Try to save to JSON file
+    // Development: Always read fresh data from JSON file
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const fs = require('fs');
       // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const path = require('path');
-      
-      mediaFiles = [...mediaFiles, file];
       const filePath = path.join(process.cwd(), 'data/media.json');
-      fs.writeFileSync(filePath, JSON.stringify(mediaFiles, null, 2));
+      
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf8');
+        const parsedData = JSON.parse(data);
+        console.log('📱 Loaded', parsedData.length, 'media files from JSON');
+        return Array.isArray(parsedData) ? parsedData : [];
+      } else {
+        console.log('⚠️ media.json file not found, returning empty array');
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Error reading media.json:', error);
+      return [];
+    }
+  } else {
+    // Production: Use in-memory fallback
+    await ensureDataLoaded();
+    return [...mediaFiles];
+  }
+}
+
+// Add media file
+export async function addMediaFile(file: MediaFile): Promise<MediaFile> {
+  if (canUseFileSystem()) {
+    // Development: Always read current data first, then add and save
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+      const fs = require('fs');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'data/media.json');
+      
+      // Read current data
+      let currentFiles: MediaFile[] = [];
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf8');
+        const parsedData = JSON.parse(data);
+        currentFiles = Array.isArray(parsedData) ? parsedData : [];
+      }
+      
+      // Add new file
+      const updatedFiles = [...currentFiles, file];
+      
+      // Save back to file
+      fs.writeFileSync(filePath, JSON.stringify(updatedFiles, null, 2));
       
       console.log('✅ Media file saved to JSON:', file.name);
+      return file;
     } catch (error) {
-      console.warn('⚠️ Could not save to JSON file, using memory only:', error);
+      console.warn('⚠️ Could not save to JSON file:', error);
+      // Fallback to memory
+      await ensureDataLoaded();
       mediaFiles = [...mediaFiles, file];
+      return file;
     }
   } else {
     // Production: Memory only
+    await ensureDataLoaded();
     mediaFiles = [...mediaFiles, file];
     console.log('💾 Media file saved to memory (production mode):', file.name);
+    return file;
   }
-  
-  return file;
 }
 
 // Delete media files
 export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: string[]; errors: string[] }> {
-  await ensureDataLoaded();
-  
   const deletedFiles: string[] = [];
   const errors: string[] = [];
   
-  for (const id of ids) {
-    const index = mediaFiles.findIndex(file => file.id === id);
-    if (index !== -1) {
-      const deletedFile = mediaFiles[index];
-      mediaFiles.splice(index, 1);
-      deletedFiles.push(id);
+  if (canUseFileSystem()) {
+    // Development: Read current data, filter, and save back
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+      const fs = require('fs');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'data/media.json');
       
-      if (canUseFileSystem()) {
-        // Development: Try to update JSON file
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-          const fs = require('fs');
-          // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-          const path = require('path');
-          const filePath = path.join(process.cwd(), 'data/media.json');
-          fs.writeFileSync(filePath, JSON.stringify(mediaFiles, null, 2));
-          console.log('✅ Media JSON updated after deletion');
-        } catch (error) {
-          console.warn('⚠️ Could not update JSON file:', error);
+      // Read current data
+      let currentFiles: MediaFile[] = [];
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf8');
+        const parsedData = JSON.parse(data);
+        currentFiles = Array.isArray(parsedData) ? parsedData : [];
+      }
+      
+      // Collect files to delete for physical file cleanup
+      const filesToDelete: MediaFile[] = [];
+      
+      // Filter out deleted files
+      const filteredFiles = currentFiles.filter(file => {
+        if (ids.includes(file.id)) {
+          filesToDelete.push(file);
+          deletedFiles.push(file.id);
+          return false;
         }
-        
-        // Try to delete actual file from public/media
+        return true;
+      });
+      
+      // Save updated data back to JSON
+      fs.writeFileSync(filePath, JSON.stringify(filteredFiles, null, 2));
+      console.log('✅ Media JSON updated after deletion');
+      
+      // Delete physical files from public/media
+      for (const file of filesToDelete) {
         try {
-          if (canUseFileSystem()) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-            const fs = require('fs');
-            // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-            const path = require('path');
-            
-            const mediaPath = path.join(process.cwd(), 'public/media', deletedFile.name);
-            if (fs.existsSync(mediaPath)) {
-              fs.unlinkSync(mediaPath);
-              console.log('✅ Physical file deleted:', deletedFile.name);
-            }
+          const mediaPath = path.join(process.cwd(), 'public/media', file.name);
+          if (fs.existsSync(mediaPath)) {
+            fs.unlinkSync(mediaPath);
+            console.log('✅ Physical file deleted:', file.name);
           }
         } catch (error) {
-          console.warn('⚠️ Could not delete physical file:', error);
+          console.warn('⚠️ Could not delete physical file:', file.name, error);
         }
       }
-    } else {
-      errors.push(`File not found: ${id}`);
+      
+    } catch (error) {
+      console.error('❌ Error during file deletion:', error);
+      errors.push('Failed to update media list');
+    }
+  } else {
+    // Production: Memory only
+    await ensureDataLoaded();
+    
+    for (const id of ids) {
+      const index = mediaFiles.findIndex(file => file.id === id);
+      if (index !== -1) {
+        mediaFiles.splice(index, 1);
+        deletedFiles.push(id);
+      } else {
+        errors.push(`File not found: ${id}`);
+      }
     }
   }
   
