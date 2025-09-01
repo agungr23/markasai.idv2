@@ -1,15 +1,31 @@
 // Vercel Blob Storage for persistent data
-// Safe Edge Runtime compatible version
+// Production-ready implementation with fallback to JSON storage in development
 import { MediaFile, BlogPost, CaseStudy, Testimonial, Product } from '@/types';
 import { getEnvironmentInfo } from './environment';
+
+// Conditional import for Vercel Blob to avoid build errors in development
+let put: any, list: any, del: any;
+
+if (typeof window === 'undefined') {
+  // Server-side only imports
+  try {
+    const blobModule = require('@vercel/blob');
+    put = blobModule.put;
+    list = blobModule.list;
+    del = blobModule.del;
+  } catch {
+    // Fallback if @vercel/blob is not available
+    console.log('⚠️ @vercel/blob not available, using fallback storage');
+  }
+}
 
 // Environment check
 function isVercelProduction() {
   const env = getEnvironmentInfo();
-  return env.isVercel && env.isProduction;
+  return env.isVercel && env.isProduction && put && list && del;
 }
 
-// For now, use JSON storage fallback since @vercel/blob isn't installed
+// Fallback to JSON storage in development
 import * as jsonStorage from './storage-json-only';
 
 // Data storage keys
@@ -30,9 +46,12 @@ async function saveToBlob<T>(key: string, data: T[]): Promise<void> {
   }
 
   try {
-    // TODO: Implement actual Vercel Blob storage when @vercel/blob is available
-    console.log(`📝 Would save to Vercel Blob: ${key}`);
-    console.log('⚠️ Vercel Blob not implemented - data not persisted in production');
+    const jsonData = JSON.stringify(data, null, 2);
+    await put(key, jsonData, {
+      access: 'public',
+      contentType: 'application/json'
+    });
+    console.log(`✅ Saved to Vercel Blob: ${key}`);
   } catch (error) {
     console.error(`❌ Failed to save to Vercel Blob: ${key}`, error);
     throw error;
@@ -59,9 +78,14 @@ async function loadFromBlob<T>(key: string, fallback: T[] = []): Promise<T[]> {
   }
 
   try {
-    // TODO: Implement actual Vercel Blob loading when @vercel/blob is available
-    console.log(`📖 Would load from Vercel Blob: ${key}`);
-    return fallback;
+    const { blobs } = await list({ prefix: key });
+    if (blobs.length === 0) {
+      return fallback;
+    }
+
+    const response = await fetch(blobs[0].url);
+    const data = await response.json();
+    return Array.isArray(data) ? data : fallback;
   } catch (error) {
     console.error(`❌ Failed to load from Vercel Blob: ${key}`, error);
     return fallback;
@@ -165,13 +189,32 @@ export async function deleteMediaFiles(ids: string[]): Promise<{ deletedFiles: s
   const deletedFiles: string[] = [];
   const errors: string[] = [];
   
+  // Filter files and collect URLs for deletion
+  const filesToDelete: MediaFile[] = [];
   const filtered = files.filter(file => {
     if (ids.includes(file.id)) {
+      filesToDelete.push(file);
       deletedFiles.push(file.id);
       return false;
     }
     return true;
   });
+  
+  // Delete actual blob files if in production
+  if (isVercelProduction()) {
+    for (const file of filesToDelete) {
+      try {
+        // Extract blob URL and delete from Vercel Blob
+        if (file.url && file.url.includes('blob.vercel-storage.com')) {
+          await del(file.url);
+          console.log(`✅ Deleted blob file: ${file.name}`);
+        }
+      } catch (error) {
+        console.error(`❌ Failed to delete blob file: ${file.name}`, error);
+        errors.push(`Failed to delete ${file.name}`);
+      }
+    }
+  }
   
   await saveMediaFiles(filtered);
   
@@ -203,19 +246,21 @@ export async function uploadMediaToBlob(file: File): Promise<MediaFile> {
   }
 
   try {
-    // TODO: Implement actual Vercel Blob file upload when @vercel/blob is available
+    // Upload file ke Vercel Blob
     const timestamp = Date.now();
     const filename = `${timestamp}_${file.name}`;
     
-    console.log(`📝 Would upload to Vercel Blob: ${filename}`);
-    console.log('⚠️ Vercel Blob upload not implemented - returning mock data');
+    const blob = await put(`media/${filename}`, file, {
+      access: 'public',
+      contentType: file.type
+    });
 
-    // Create mock media file entry for now
+    // Create media file entry
     const mediaFile: MediaFile = {
       id: timestamp.toString(),
       name: filename,
       originalName: file.name,
-      url: `/media/${filename}`, // Mock URL
+      url: blob.url,
       type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file',
       size: formatFileSize(file.size),
       uploadedAt: new Date().toLocaleDateString('id-ID'),
