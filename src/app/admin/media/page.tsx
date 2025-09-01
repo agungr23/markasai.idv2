@@ -69,7 +69,7 @@ export default function AdminMediaPage() {
     setIsUploading(true);
 
     try {
-      const uploadedResults = [];
+      const uploadedResults: MediaFile[] = [];
       
       // Upload files one by one
       for (const file of Array.from(fileList)) {
