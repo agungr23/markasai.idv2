@@ -1,32 +1,13 @@
 // Server-Sent Events for real-time media updates
 import { NextRequest } from 'next/server';
-
-// Store active connections
-const connections = new Set<ReadableStreamDefaultController>();
-
-// Helper to broadcast events to all connected clients
-export function broadcastMediaEvent(event: {
-    type: 'upload' | 'delete' | 'update';
-    data: unknown;
-}) {
-    const message = `data: ${JSON.stringify(event)}\n\n`;
-
-    connections.forEach(controller => {
-        try {
-            controller.enqueue(new TextEncoder().encode(message));
-        } catch {
-            // Remove dead connections
-            connections.delete(controller);
-        }
-    });
-}
+import { addConnection, removeConnection } from '@/lib/media-events';
 
 export async function GET(request: NextRequest) {
     // Create readable stream for SSE
     const stream = new ReadableStream({
         start(controller) {
             // Add connection to active connections
-            connections.add(controller);
+            addConnection(controller);
 
             // Send initial connection message
             const message = `data: ${JSON.stringify({ type: 'connected', message: 'Real-time media updates active' })}\n\n`;
@@ -39,14 +20,14 @@ export async function GET(request: NextRequest) {
                     controller.enqueue(new TextEncoder().encode(ping));
                 } catch {
                     clearInterval(keepAlive);
-                    connections.delete(controller);
+                    removeConnection(controller);
                 }
             }, 30000);
 
             // Cleanup on close
             request.signal.addEventListener('abort', () => {
                 clearInterval(keepAlive);
-                connections.delete(controller);
+                removeConnection(controller);
                 try {
                     controller.close();
                 } catch {
@@ -56,7 +37,7 @@ export async function GET(request: NextRequest) {
         },
 
         cancel(controller) {
-            connections.delete(controller);
+            removeConnection(controller);
         }
     });
 

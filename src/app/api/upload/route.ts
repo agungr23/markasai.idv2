@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadMediaToBlob } from '@/lib/vercel-blob-storage';
 import { getEnvironmentInfo } from '@/lib/environment';
-import { broadcastMediaEvent } from '../media/events/route';
+import { broadcastMediaEvent } from '@/lib/media-events';
 
 export async function POST(request: NextRequest) {
   try {

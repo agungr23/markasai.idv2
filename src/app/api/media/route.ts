@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import * as blobStorage from '@/lib/vercel-blob-storage';
 import { MediaFile } from '@/types';
-import { broadcastMediaEvent } from './events/route';
+import { broadcastMediaEvent } from '@/lib/media-events';
 
 export async function GET() {
   try {

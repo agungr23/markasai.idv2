@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as blobStorage from '@/lib/vercel-blob-storage';
-import { broadcastMediaEvent } from '../events/route';
+import { broadcastMediaEvent } from '@/lib/media-events';
 
 export async function DELETE(request: NextRequest) {
   try {
