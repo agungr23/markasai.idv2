@@ -8,6 +8,19 @@ export function setToastFunction(toastFn: (message: string, type: 'success' | 'e
     addToast = toastFn;
 }
 
+// Type guard functions
+function isUploadEventData(data: unknown): data is { file: MediaFile } {
+    return typeof data === 'object' && data !== null && 'file' in data;
+}
+
+function isDeleteEventData(data: unknown): data is { deletedFiles: string[] } {
+    return typeof data === 'object' && data !== null && 'deletedFiles' in data;
+}
+
+function isUpdateEventData(data: unknown): data is { file: MediaFile } {
+    return typeof data === 'object' && data !== null && 'file' in data;
+}
+
 interface MediaEvent {
     type: 'upload' | 'delete' | 'update' | 'connected' | 'ping';
     data?: unknown;
@@ -47,7 +60,7 @@ export function useRealtimeMedia() {
                 break;
 
             case 'upload':
-                if (event.data?.file) {
+                if (isUploadEventData(event.data)) {
                     setMediaFiles(prevFiles => {
                         // Check if file already exists (prevent duplicates)
                         const exists = prevFiles.some(f => f.id === event.data.file.id);
@@ -67,7 +80,7 @@ export function useRealtimeMedia() {
                 break;
 
             case 'delete':
-                if (event.data?.deletedFiles) {
+                if (isDeleteEventData(event.data)) {
                     setMediaFiles(prevFiles =>
                         prevFiles.filter(file => !event.data.deletedFiles.includes(file.id))
                     );
@@ -83,7 +96,7 @@ export function useRealtimeMedia() {
                 break;
 
             case 'update':
-                if (event.data?.file) {
+                if (isUpdateEventData(event.data)) {
                     setMediaFiles(prevFiles =>
                         prevFiles.map(file =>
                             file.id === event.data.file.id ? event.data.file : file
